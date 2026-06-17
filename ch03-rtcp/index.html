@@ -1,0 +1,430 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>實戰：RTCP 五軸插補系統 — 三層 SSE 架構 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"><style>.cb-wrap[data-astro-cid-jgrc2lfe]{margin-bottom:1.25rem}.cb-bar[data-astro-cid-jgrc2lfe]{display:flex;align-items:center;justify-content:space-between;background:#1a1a2e;border-radius:6px 6px 0 0;border:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05);padding:.18rem .5rem .18rem .75rem;min-height:1.8rem}.cb-label[data-astro-cid-jgrc2lfe]{color:#a6adc8;font-family:Fira Code,Cascadia Code,Consolas,monospace;font-size:.73rem;letter-spacing:.04em}.cb-inner[data-astro-cid-jgrc2lfe] pre{border-radius:0 0 8px 8px!important;margin-bottom:0!important}.cb-copy[data-astro-cid-jgrc2lfe]{background:#ffffff14;color:#888;border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:.15rem .55rem;font-size:.7rem;cursor:pointer;transition:all .15s;flex-shrink:0}.cb-copy[data-astro-cid-jgrc2lfe]:hover{background:#ffffff2e;color:#fff}.cb-copy[data-astro-cid-jgrc2lfe].copied{color:#4ec9b0;border-color:#4ec9b0}
+</style></head>Node.js SSE 簡易指南 <meta name="description" content="以 RTCP 五軸 CNC 插補系統為例，深入解析瀏覽器、Node.js、C99 引擎三層架構如何透過 SSE 串接，實現即時進度串流與雙向 IPC 控制。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <span class="clabel">實戰進階</span> <h1>RTCP 五軸插補系統：三層 SSE 架構實戰</h1> <p class="cdesc">
+前兩章我們學會了 SSE 的基礎推播與子行程整合。本章以一個真實的工業級系統 <strong>RTCP（Rotation Tool Center Point）</strong> 五軸 CNC 插補工具鏈為例，展示如何在「瀏覽器 → Node.js → C99 引擎」三層架構下，用 SSE 實現即時進度串流、批次確認控制、以及最終的 Plotly.js 結果視覺化。
+</p> <div class="call info"> <div class="ci">ℹ️</div> <div> <strong>本章目標</strong> <ul> <li>理解三層系統的職責分工與溝通協定</li> <li>掌握 <code>POST /run</code> 如何同時充當觸發端點與 SSE 推播通道</li> <li>了解雙向 IPC：stdout 串流 + stdin 控制的設計模式</li> <li>看懂前端如何依照事件類型分別更新 UI 與送出控制指令</li> </ul> </div> </div>  <h2>1. 三層關係圖</h2> <p>整個 RTCP 系統由三層組成，每層各有明確的職責，彼此透過兩條通道連接：</p> <ul> <li><strong>第一層（瀏覽器）</strong>：所有使用者互動、G-code 解析、設定匯出、進度顯示、圖表渲染</li> <li><strong>第二層（Node.js）</strong>：HTTP 閘道、子行程生命週期管理、SSE 推播橋接</li> <li><strong>第三層（C99 引擎）</strong>：高效能數值運算，透過 CSV/JSON 輸入，以 IPC JSON 串流輸出</li> </ul> <figure class="ss"> <pre class="mermaid">graph TB
+    subgraph B["第一層：瀏覽器前端（RTCP_UI）"]
+        B1[G-code 解析器]
+        B2[機台幾何設定]
+        B3[匯出與執行控制]
+        B4[Plotly.js 結果視覺化]
+    end
+    subgraph N["第二層：Node.js 伺服器（server.js）"]
+        N1["POST /run — SSE 串流推播"]
+        N2["POST /control — 互動控制指令"]
+        N3["Static File Server — 靜態檔案服務"]
+    end
+    subgraph C["第三層：C99 運算引擎（rtcp_engine.exe）"]
+        C1[CSV Reader — 路徑點載入]
+        C2["四元數插補 — SLERP / SQUAD / Quintic"]
+        C3[TATC 逆向運動學]
+        C4[CSV Writer — 結果寫出]
+    end
+    B -->|"HTTP POST + EventSource SSE"| N
+    N -->|"child_process.spawn  +  stdin / stdout IPC"| C</pre> <figcaption>圖 1：RTCP 系統三層關係圖（瀏覽器 → Node.js → C99 引擎）</figcaption> </figure> <p>兩條通道的協定如下：</p> <table> <thead> <tr><th>通道</th><th>方向</th><th>技術</th><th>用途</th></tr> </thead> <tbody> <tr> <td>瀏覽器 ↔ Node.js</td> <td>雙向</td> <td>HTTP POST + SSE EventSource</td> <td>觸發運算、接收進度推播、送出控制指令</td> </tr> <tr> <td>Node.js ↔ C99 引擎</td> <td>雙向</td> <td><code>child_process.spawn</code> IPC</td> <td>stdout → JSON 進度串流；stdin ← continue / end</td> </tr> </tbody> </table>  <h2>2. 系統架構與完整流程</h2> <p>以下循序圖展示從「使用者備妥輸入資料」到「結果視覺化」的完整互動流程，特別標注了 SSE 通道的建立時機與批次確認機制：</p> <figure class="ss"> <pre class="mermaid">sequenceDiagram
+    participant U as 瀏覽器 (RTCP_UI)
+    participant S as Node.js (server.js)
+    participant E as rtcp_engine.exe
+
+    Note over U,S: 1. 準備輸入資料
+    U->>U: 解析 G-code → 路徑點清單
+    U->>U: 設定機台幾何 → tatc_config.json
+    U->>U: 匯出 cl_input.csv
+
+    Note over U,S: 2. 啟動計算並建立 SSE 通道
+    U->>S: POST /run
+    S-->>U: 200 OK（Content-Type: text/event-stream）
+
+    Note over S,E: 3. 子行程啟動與進度串流
+    S->>E: spawn rtcp_engine.exe --ipc --input --config --method slerp
+    E-->>S: stdout: {"type":"progress","t_ms":1.0,"s_mm":0.01,"count":1}
+    S-->>U: data: {"type":"progress","t_ms":1.0,...}
+    E-->>S: stdout: {"type":"batch_end","count":5}
+    S-->>U: data: {"type":"batch_end","count":5}
+
+    Note over U,S: 4. 互動控制（繼續 / 強制結束）
+    U->>S: POST /control {"cmd":"continue"}
+    S->>E: stdin.write("continue\n")
+    E-->>S: 繼續下一批次輸出…
+
+    Note over S,E: 5. 任務完成
+    E->>S: process exit(0)
+    S-->>U: data: {"type":"exit","code":0}
+    S->>S: res.end()  +  engine = null
+    U->>U: 載入 result.csv → Plotly 視覺化</pre> <figcaption>圖 2：RTCP 系統端對端循序圖（含 SSE 串流與 stdin 控制）</figcaption> </figure> <p>流程分為五個階段：</p> <ol> <li><strong>準備輸入資料</strong>：前端在瀏覽器本地完成 G-code 解析與機台設定，匯出 <code>cl_input.csv</code> 與 <code>tatc_config.json</code>。</li> <li><strong>建立 SSE 通道</strong>：前端對 <code>POST /run</code> 發送請求，伺服器回應 <code>Content-Type: text/event-stream</code>，此後同一個 HTTP 連線轉為推播通道。</li> <li><strong>子行程串流</strong>：Node.js 以 <code>spawn()</code> 啟動 <code>rtcp_engine.exe --ipc</code>，將 engine 的 stdout 逐行轉為 SSE 事件推播。</li> <li><strong>批次確認控制</strong>：Engine 每完成一批次（<code>batch_end</code>）便阻塞等待 stdin 輸入；瀏覽器透過 <code>POST /control</code> 回傳 <code>continue</code> 或 <code>end</code>。</li> <li><strong>任務完成</strong>：Engine 正常退出後，伺服器推播 <code>exit</code> 事件並關閉 SSE 連線，前端讀取 <code>result.csv</code> 進行視覺化。</li> </ol>  <h2>3. 前後端主要功能方塊說明</h2> <h3>3-1. 前端功能方塊（RTCP_UI / index.html）</h3> <p>前端是一個單頁四標籤的純 HTML 應用，不依賴前端框架，全部邏輯分散於四個 JS 模組：</p> <figure class="ss"> <pre class="mermaid">flowchart LR
+    GI["G-code 輸入\n(.nc / .gcode / .tap)"] --> GP["gcode_parser.js\nG00/G01 路徑點解析"]
+    GP --> TB["路徑點預覽表格"]
+    GP --> EX["csv_export.js\n匯出 cl_input.csv"]
+    MC["Machine Config\nPivot / Tool Length / A-C axis"] --> CFG["匯出 tatc_config.json"]
+    EX --> RUN["POST /run\nSSE EventSource 接收"]
+    CFG --> RUN
+    RUN --> |"batch_end 事件"| CT["Control Panel\ncontinue  /  end"]
+    CT --> |"POST /control"| SV["server.js"]
+    RUN --> |"exit 事件 → 結果就緒"| VZ["visualization.js"]
+    VZ --> V1["2D 軌跡 (XY / XZ / YZ)"]
+    VZ --> V2["3D 彩色路徑"]
+    VZ --> V3["速度曲線 Time Series"]
+    VZ --> V4["原始資料表格"]</pre> <figcaption>圖 3：前端功能方塊與資料流向</figcaption> </figure> <table> <thead> <tr><th>模組 / 元件</th><th>檔案</th><th>職責</th></tr> </thead> <tbody> <tr> <td>G-code 解析器</td> <td><code>js/gcode_parser.js</code></td> <td>解析 FANUC 五軸 G-code（G00/G01），擷取 X/Y/Z/A/C 路徑點，輸出結構化陣列</td> </tr> <tr> <td>CSV 匯出器</td> <td><code>js/csv_export.js</code></td> <td>將路徑點陣列序列化為 <code>cl_input.csv</code>，以及將機台設定序列化為 <code>tatc_config.json</code></td> </tr> <tr> <td>前端插補預覽</td> <td><code>js/interpolation.js</code></td> <td>在瀏覽器端執行 JavaScript 版 SLERP 預覽，不需要呼叫伺服器即可快速確認結果</td> </tr> <tr> <td>SSE 客戶端 + 控制面板</td> <td><code>index.html（Tab 3）</code></td> <td>對 <code>POST /run</code> 發起請求後轉為 SSE 接收端；偵測 <code>batch_end</code> 後顯示「繼續」按鈕；觸發 <code>POST /control</code></td> </tr> <tr> <td>結果視覺化</td> <td><code>js/visualization.js</code></td> <td>使用 Plotly.js 渲染七種圖表：資料表格、2D XY/XZ/YZ 軌跡、3D 彩色路徑、速度曲線</td> </tr> </tbody> </table> <h3>前端：SSE 接收與控制邏輯（關鍵片段）</h3> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="// Tab 3 — 執行控制區塊
+const progressEl = document.getElementById('progress');
+const ctrlBtn    = document.getElementById('btn-control');
+let   isBatchEnd = false;
+
+async function runEngine() {
+    // POST /run 回應的是 SSE 串流，需用 fetch + ReadableStream 處理
+    const response = await fetch('/run', { method: 'POST' });
+    const reader   = response.body.getReader();
+    const decoder  = new TextDecoder();
+    let   buf      = '';
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+
+        for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const evt = JSON.parse(line.slice(6));
+            handleEvent(evt);
+        }
+    }
+}
+
+function handleEvent(evt) {
+    if (evt.type === 'progress') {
+        // 更新進度顯示
+        progressEl.textContent = `t=${evt.t_ms} ms  s=${evt.s_mm} mm  rows=${evt.count}`;
+    } else if (evt.type === 'batch_end') {
+        // 批次完成：顯示繼續按鈕，等待使用者確認
+        isBatchEnd = true;
+        ctrlBtn.style.display = 'inline-block';
+        ctrlBtn.textContent   = `繼續 (已完成 ${evt.count} 點)`;
+    } else if (evt.type === 'exit') {
+        progressEl.textContent = `✅ 完成，exit code=${evt.code}`;
+        ctrlBtn.style.display  = 'none';
+    }
+}
+
+// 送出控制指令：continue 或 end
+async function sendControl(cmd) {
+    await fetch('/control', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ cmd })
+    });
+    isBatchEnd = false;
+    ctrlBtn.style.display = 'none';
+}" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="javascript"><code><span class="line"><span style="color:#7F848E;font-style:italic">// Tab 3 — 執行控制區塊</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> progressEl</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getElementById</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'progress'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> ctrlBtn</span><span style="color:#56B6C2">    =</span><span style="color:#E5C07B"> document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getElementById</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'btn-control'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">let</span><span style="color:#E06C75">   isBatchEnd</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> false</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">async</span><span style="color:#C678DD"> function</span><span style="color:#61AFEF"> runEngine</span><span style="color:#ABB2BF">() {</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // POST /run 回應的是 SSE 串流，需用 fetch + ReadableStream 處理</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#E5C07B"> response</span><span style="color:#56B6C2"> =</span><span style="color:#C678DD"> await</span><span style="color:#61AFEF"> fetch</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/run'</span><span style="color:#ABB2BF">, { </span><span style="color:#E06C75">method</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'POST'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#E5C07B"> reader</span><span style="color:#56B6C2">   =</span><span style="color:#E5C07B"> response</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">body</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getReader</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#E5C07B"> decoder</span><span style="color:#56B6C2">  =</span><span style="color:#C678DD"> new</span><span style="color:#61AFEF"> TextDecoder</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#C678DD">    let</span><span style="color:#E06C75">   buf</span><span style="color:#56B6C2">      =</span><span style="color:#98C379"> ''</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">    while</span><span style="color:#ABB2BF"> (</span><span style="color:#D19A66">true</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#ABB2BF"> { </span><span style="color:#E5C07B">done</span><span style="color:#ABB2BF">, </span><span style="color:#E5C07B">value</span><span style="color:#ABB2BF"> } </span><span style="color:#56B6C2">=</span><span style="color:#C678DD"> await</span><span style="color:#E5C07B"> reader</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">read</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#C678DD">        if</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75">done</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">break</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E06C75">        buf</span><span style="color:#56B6C2"> +=</span><span style="color:#E5C07B"> decoder</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">decode</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">value</span><span style="color:#ABB2BF">, { </span><span style="color:#E06C75">stream</span><span style="color:#ABB2BF">: </span><span style="color:#D19A66">true</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> lines</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> buf</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">split</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'</span><span style="color:#56B6C2">\n</span><span style="color:#98C379">'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E06C75">        buf</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> lines</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">pop</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">        for</span><span style="color:#ABB2BF"> (</span><span style="color:#C678DD">const</span><span style="color:#E5C07B"> line</span><span style="color:#C678DD"> of</span><span style="color:#E06C75"> lines</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">            if</span><span style="color:#ABB2BF"> (</span><span style="color:#56B6C2">!</span><span style="color:#E5C07B">line</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">startsWith</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'data: '</span><span style="color:#ABB2BF">)) </span><span style="color:#C678DD">continue</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#C678DD">            const</span><span style="color:#E5C07B"> evt</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">parse</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">line</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">slice</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">6</span><span style="color:#ABB2BF">));</span></span>
+<span class="line"><span style="color:#61AFEF">            handleEvent</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">evt</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">        }</span></span>
+<span class="line"><span style="color:#ABB2BF">    }</span></span>
+<span class="line"><span style="color:#ABB2BF">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">function</span><span style="color:#61AFEF"> handleEvent</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75;font-style:italic">evt</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">    if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'progress'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">        // 更新進度顯示</span></span>
+<span class="line"><span style="color:#E5C07B">        progressEl</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">textContent</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> `t=</span><span style="color:#C678DD">${</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">t_ms</span><span style="color:#C678DD">}</span><span style="color:#98C379"> ms  s=</span><span style="color:#C678DD">${</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">s_mm</span><span style="color:#C678DD">}</span><span style="color:#98C379"> mm  rows=</span><span style="color:#C678DD">${</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">count</span><span style="color:#C678DD">}</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">    } </span><span style="color:#C678DD">else</span><span style="color:#C678DD"> if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'batch_end'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">        // 批次完成：顯示繼續按鈕，等待使用者確認</span></span>
+<span class="line"><span style="color:#E06C75">        isBatchEnd</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> true</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#E5C07B">        ctrlBtn</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">style</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">display</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> 'inline-block'</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#E5C07B">        ctrlBtn</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">textContent</span><span style="color:#56B6C2">   =</span><span style="color:#98C379"> `繼續 (已完成 </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">count</span><span style="color:#C678DD">}</span><span style="color:#98C379"> 點)`</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">    } </span><span style="color:#C678DD">else</span><span style="color:#C678DD"> if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'exit'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#E5C07B">        progressEl</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">textContent</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> `✅ 完成，exit code=</span><span style="color:#C678DD">${</span><span style="color:#E5C07B">evt</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">code</span><span style="color:#C678DD">}</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#E5C07B">        ctrlBtn</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">style</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">display</span><span style="color:#56B6C2">  =</span><span style="color:#98C379"> 'none'</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">    }</span></span>
+<span class="line"><span style="color:#ABB2BF">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// 送出控制指令：continue 或 end</span></span>
+<span class="line"><span style="color:#C678DD">async</span><span style="color:#C678DD"> function</span><span style="color:#61AFEF"> sendControl</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75;font-style:italic">cmd</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">    await</span><span style="color:#61AFEF"> fetch</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/control'</span><span style="color:#ABB2BF">, {</span></span>
+<span class="line"><span style="color:#E06C75">        method</span><span style="color:#ABB2BF">:  </span><span style="color:#98C379">'POST'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#E06C75">        headers</span><span style="color:#ABB2BF">: { </span><span style="color:#98C379">'Content-Type'</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'application/json'</span><span style="color:#ABB2BF"> },</span></span>
+<span class="line"><span style="color:#E06C75">        body</span><span style="color:#ABB2BF">:    </span><span style="color:#E5C07B">JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">stringify</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">cmd</span><span style="color:#ABB2BF"> })</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"><span style="color:#E06C75">    isBatchEnd</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> false</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#E5C07B">    ctrlBtn</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">style</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">display</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> 'none'</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">}</span></span></code></pre> </div> </div>  <script type="module">document.querySelectorAll(".cb-copy").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.code;t&&navigator.clipboard.writeText(t).then(()=>{e.textContent="已複製!",e.classList.add("copied"),setTimeout(()=>{e.textContent="複製",e.classList.remove("copied")},2e3)})})});</script> <h3>3-2. 後端功能方塊（Node.js server.js）</h3> <p>後端僅有一個 <code>server.js</code>，職責極為聚焦：充當前端與 C99 引擎之間的 IPC 橋接器。</p> <figure class="ss"> <pre class="mermaid">flowchart TD
+    RUN["POST /run"] --> CHK{"engine\n已在執行?"}
+    CHK -- 是 --> R409["return 409 Conflict"]
+    CHK -- 否 --> HDR["設定 SSE 標頭\nContent-Type: text/event-stream"]
+    HDR --> SP["spawn rtcp_engine.exe\n--ipc --input cl_input.csv\n--config tatc_config.json\n--method slerp --dt 1"]
+    SP --> BUF["stdout Buffer 逐行解析"]
+    BUF --> WR["res.write(data: ...)\n推送進度至瀏覽器"]
+    SP --> EXIT["engine close 事件"]
+    EXIT --> FINI["res.write exit JSON\nres.end()\nengine = null"]
+
+    CTRL["POST /control"] --> CHK2{"engine\n存在?"}
+    CHK2 -- 否 --> R400["return 400"]
+    CHK2 -- 是 --> STDIN["engine.stdin.write\ncontinue 或 end"]</pre> <figcaption>圖 4：後端功能方塊與請求處理邏輯</figcaption> </figure> <table> <thead> <tr><th>端點</th><th>方法</th><th>職責</th></tr> </thead> <tbody> <tr> <td><code>/run</code></td> <td>POST</td> <td>防止重複啟動（409）→ 設定 SSE 標頭 → spawn 引擎 → stdout 逐行推播 → close 時 res.end()</td> </tr> <tr> <td><code>/control</code></td> <td>POST</td> <td>驗證引擎是否在執行 → 驗證指令為 continue/end → engine.stdin.write(cmd)</td> </tr> <tr> <td><code>/</code>（靜態）</td> <td>GET</td> <td>提供 RTCP_UI 目錄下的 HTML/JS/CSS 靜態檔案</td> </tr> </tbody> </table> <h3>後端：子行程管理與 SSE 推播核心（完整 server.js）</h3> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="'use strict';
+const express = require('express');
+const { spawn } = require('child_process');
+const path = require('path');
+
+const app = express();
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'RTCP_UI')));
+
+const ENGINE_EXE = path.join(__dirname, 'RTCP_Engine', 'build', 'rtcp_engine.exe');
+const ENGINE_CWD = path.join(__dirname, 'RTCP_Engine');
+
+let engine = null;   // 確保同一時間只有一個執行中的引擎
+
+/* ── POST /run — 啟動引擎並以 SSE 串流輸出 ──────────────────── */
+app.post('/run', (req, res) => {
+    if (engine) {
+        return res.status(409).json({ error: 'Engine already running' });
+    }
+
+    // 宣告為 SSE 回應：這條 HTTP 連線從此轉為推播通道
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    engine = spawn(ENGINE_EXE, [
+        '--input',  'data/cl_input.csv',
+        '--config', 'data/tatc_config.json',
+        '--method', 'slerp',
+        '--dt',     '1',
+        '--output', 'result.csv',
+        '--ipc'           // IPC 模式：JSON 輸出到 stdout，並在 batch_end 後阻塞等待 stdin
+    ], { cwd: ENGINE_CWD });
+
+    let buf = '';
+
+    // 攔截 stdout：逐行轉為 SSE data 事件
+    engine.stdout.on('data', (chunk) => {
+        buf += chunk.toString();
+        const lines = buf.split('\n');
+        buf = lines.pop();  // 保留未完整的最後一行
+        for (const line of lines) {
+            if (line.trim()) res.write(`data: ${line.trim()}\n\n`);
+        }
+    });
+
+    engine.stderr.on('data', (chunk) => process.stderr.write(chunk));
+
+    // 引擎結束：推播 exit 事件，關閉 SSE 連線
+    engine.on('close', (code) => {
+        if (buf.trim()) res.write(`data: ${buf.trim()}\n\n`);
+        res.write(`data: ${JSON.stringify({ type: 'exit', code })}\n\n`);
+        res.end();
+        engine = null;
+    });
+
+    // 客戶端斷線：強制終止引擎
+    req.on('close', () => {
+        if (engine) { engine.kill(); engine = null; }
+    });
+});
+
+/* ── POST /control — 透過 stdin 向引擎送出控制指令 ──────────── */
+app.post('/control', (req, res) => {
+    const { cmd } = req.body;
+    if (!engine) return res.status(400).json({ error: 'No engine running' });
+    if (cmd !== 'continue' &amp;&amp; cmd !== 'end') {
+        return res.status(400).json({ error: 'cmd must be &quot;continue&quot; or &quot;end&quot;' });
+    }
+    engine.stdin.write(cmd + '\n');
+    res.json({ ok: true });
+});
+
+app.listen(3000, () => console.log('RTCP server: http://localhost:3000'));" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="javascript"><code><span class="line"><span style="color:#98C379">'use strict'</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> express</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'express'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#ABB2BF"> { </span><span style="color:#E5C07B">spawn</span><span style="color:#ABB2BF"> } </span><span style="color:#56B6C2">=</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'child_process'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> path</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'path'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> app</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> express</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">use</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">express</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">());</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">use</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">express</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">static</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">path</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">join</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">__dirname</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'RTCP_UI'</span><span style="color:#ABB2BF">)));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> ENGINE_EXE</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> path</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">join</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">__dirname</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'RTCP_Engine'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'build'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'rtcp_engine.exe'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> ENGINE_CWD</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> path</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">join</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">__dirname</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'RTCP_Engine'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">let</span><span style="color:#E06C75"> engine</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> null</span><span style="color:#ABB2BF">;   </span><span style="color:#7F848E;font-style:italic">// 確保同一時間只有一個執行中的引擎</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">/* ── POST /run — 啟動引擎並以 SSE 串流輸出 ──────────────────── */</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">post</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/run'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">req</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75;font-style:italic">res</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">    if</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75">engine</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">        return</span><span style="color:#E5C07B"> res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">status</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">409</span><span style="color:#ABB2BF">).</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">error</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'Engine already running'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#ABB2BF">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 宣告為 SSE 回應：這條 HTTP 連線從此轉為推播通道</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Content-Type'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'text/event-stream'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Cache-Control'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'no-cache'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Connection'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'keep-alive'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">flushHeaders</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E06C75">    engine</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> spawn</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">ENGINE_EXE</span><span style="color:#ABB2BF">, [</span></span>
+<span class="line"><span style="color:#98C379">        '--input'</span><span style="color:#ABB2BF">,  </span><span style="color:#98C379">'data/cl_input.csv'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#98C379">        '--config'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'data/tatc_config.json'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#98C379">        '--method'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'slerp'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#98C379">        '--dt'</span><span style="color:#ABB2BF">,     </span><span style="color:#98C379">'1'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#98C379">        '--output'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'result.csv'</span><span style="color:#ABB2BF">,</span></span>
+<span class="line"><span style="color:#98C379">        '--ipc'</span><span style="color:#7F848E;font-style:italic">           // IPC 模式：JSON 輸出到 stdout，並在 batch_end 後阻塞等待 stdin</span></span>
+<span class="line"><span style="color:#ABB2BF">    ], { </span><span style="color:#E06C75">cwd</span><span style="color:#ABB2BF">: </span><span style="color:#E5C07B">ENGINE_CWD</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">    let</span><span style="color:#E06C75"> buf</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> ''</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 攔截 stdout：逐行轉為 SSE data 事件</span></span>
+<span class="line"><span style="color:#E5C07B">    engine</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">stdout</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'data'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">chunk</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E06C75">        buf</span><span style="color:#56B6C2"> +=</span><span style="color:#E5C07B"> chunk</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">toString</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> lines</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> buf</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">split</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'</span><span style="color:#56B6C2">\n</span><span style="color:#98C379">'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E06C75">        buf</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> lines</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">pop</span><span style="color:#ABB2BF">();  </span><span style="color:#7F848E;font-style:italic">// 保留未完整的最後一行</span></span>
+<span class="line"><span style="color:#C678DD">        for</span><span style="color:#ABB2BF"> (</span><span style="color:#C678DD">const</span><span style="color:#E5C07B"> line</span><span style="color:#C678DD"> of</span><span style="color:#E06C75"> lines</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">            if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">line</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">trim</span><span style="color:#ABB2BF">()) </span><span style="color:#E5C07B">res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`data: </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">line</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">trim</span><span style="color:#ABB2BF">()</span><span style="color:#C678DD">}</span><span style="color:#56B6C2">\n\n</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">        }</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">    engine</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">stderr</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'data'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">chunk</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#E5C07B"> process</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">stderr</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">chunk</span><span style="color:#ABB2BF">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 引擎結束：推播 exit 事件，關閉 SSE 連線</span></span>
+<span class="line"><span style="color:#E5C07B">    engine</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'close'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">code</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">        if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">buf</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">trim</span><span style="color:#ABB2BF">()) </span><span style="color:#E5C07B">res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`data: </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">buf</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">trim</span><span style="color:#ABB2BF">()</span><span style="color:#C678DD">}</span><span style="color:#56B6C2">\n\n</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">        res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`data: </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">stringify</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">type</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'exit'</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75">code</span><span style="color:#ABB2BF"> })</span><span style="color:#C678DD">}</span><span style="color:#56B6C2">\n\n</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">        res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">end</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#E06C75">        engine</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> null</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 客戶端斷線：強制終止引擎</span></span>
+<span class="line"><span style="color:#E5C07B">    req</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'close'</span><span style="color:#ABB2BF">, () </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">        if</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75">engine</span><span style="color:#ABB2BF">) { </span><span style="color:#E5C07B">engine</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">kill</span><span style="color:#ABB2BF">(); </span><span style="color:#E06C75">engine</span><span style="color:#56B6C2"> =</span><span style="color:#D19A66"> null</span><span style="color:#ABB2BF">; }</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"><span style="color:#ABB2BF">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">/* ── POST /control — 透過 stdin 向引擎送出控制指令 ──────────── */</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">post</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/control'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">req</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75;font-style:italic">res</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#ABB2BF"> { </span><span style="color:#E5C07B">cmd</span><span style="color:#ABB2BF"> } </span><span style="color:#56B6C2">=</span><span style="color:#E5C07B"> req</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">body</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#C678DD">    if</span><span style="color:#ABB2BF"> (</span><span style="color:#56B6C2">!</span><span style="color:#E06C75">engine</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">return</span><span style="color:#E5C07B"> res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">status</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">400</span><span style="color:#ABB2BF">).</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">error</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'No engine running'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#C678DD">    if</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75">cmd</span><span style="color:#56B6C2"> !==</span><span style="color:#98C379"> 'continue'</span><span style="color:#56B6C2"> &#x26;&#x26;</span><span style="color:#E06C75"> cmd</span><span style="color:#56B6C2"> !==</span><span style="color:#98C379"> 'end'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">        return</span><span style="color:#E5C07B"> res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">status</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">400</span><span style="color:#ABB2BF">).</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">error</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'cmd must be "continue" or "end"'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#ABB2BF">    }</span></span>
+<span class="line"><span style="color:#E5C07B">    engine</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">stdin</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">cmd</span><span style="color:#56B6C2"> +</span><span style="color:#98C379"> '</span><span style="color:#56B6C2">\n</span><span style="color:#98C379">'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">ok</span><span style="color:#ABB2BF">: </span><span style="color:#D19A66">true</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#ABB2BF">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">listen</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">3000</span><span style="color:#ABB2BF">, () </span><span style="color:#C678DD">=></span><span style="color:#E5C07B"> console</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">log</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'RTCP server: http://localhost:3000'</span><span style="color:#ABB2BF">));</span></span></code></pre> </div> </div>   <h3>3-3. C99 運算引擎（rtcp_engine.exe）</h3> <p>引擎以純 C99 撰寫，無任何第三方依賴，專注於數值計算。以 <code>--ipc</code> 旗標執行時進入 IPC 模式：</p> <table> <thead> <tr><th>模組</th><th>檔案</th><th>職責</th></tr> </thead> <tbody> <tr> <td>CLI 引數解析</td> <td><code>main.c</code></td> <td>解析 --input / --config / --method / --dt / --output / --ipc 等選項</td> </tr> <tr> <td>CSV 讀入</td> <td><code>csv_reader.c</code></td> <td>從 <code>cl_input.csv</code> 載入路徑點（Xm, Ym, Zm, a_deg, c_deg, qw…qz, dt_ms）</td> </tr> <tr> <td>JSON 設定載入</td> <td><code>json_config.c</code></td> <td>解析 <code>tatc_config.json</code>：Pivot 長度、A/C 軸方向與行程限制</td> </tr> <tr> <td>四元數插補</td> <td><code>interpolator.c</code> / <code>quaternion.c</code></td> <td>支援四種插補法：Euler / SLERP / SQUAD / Quintic，1 kHz 輸出密度</td> </tr> <tr> <td>TATC 逆向運動學</td> <td><code>tatc_kinematics.c</code></td> <td>將刀具中心點（CL）+ 姿態四元數轉換為機台座標（xm, ym, zm）及 A/C 軸角度</td> </tr> <tr> <td>IPC 進度回呼</td> <td><code>main.c（progress_cb）</code></td> <td>每計算一點，以 JSON 格式輸出至 stdout；每批次後阻塞 stdin 等待 continue/end</td> </tr> <tr> <td>CSV 寫出</td> <td><code>csv_writer.c</code></td> <td>輸出 14 欄結果：<code>t_ms, Xcl, Ycl, Zcl, a_deg, c_deg, xm, ym, zm, s_mm, qw, qx, qy, qz</code></td> </tr> </tbody> </table> <h3>引擎 IPC 模式輸出格式（JSON Lines）</h3> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="// 每個插補點完成後輸出：
+{&quot;type&quot;:&quot;progress&quot;,&quot;t_ms&quot;:1.000,&quot;s_mm&quot;:0.010,&quot;count&quot;:1}
+{&quot;type&quot;:&quot;progress&quot;,&quot;t_ms&quot;:2.000,&quot;s_mm&quot;:0.020,&quot;count&quot;:2}
+
+// 每批次（預設 5 點）後輸出並阻塞，等待 stdin：
+{&quot;type&quot;:&quot;batch_end&quot;,&quot;count&quot;:5}
+
+// stdin 接收到 continue → 繼續；接收到 end → 提前退出
+// 最終正常退出：Node.js 偵測到 close 事件，code=0" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="json"><code><span class="line"><span style="color:#7F848E;font-style:italic">// 每個插補點完成後輸出：</span></span>
+<span class="line"><span style="color:#ABB2BF">{</span><span style="color:#E06C75">"type"</span><span style="color:#ABB2BF">:</span><span style="color:#98C379">"progress"</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"t_ms"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">1.000</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"s_mm"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">0.010</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"count"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">1</span><span style="color:#ABB2BF">}</span></span>
+<span class="line"><span style="color:#ABB2BF">{</span><span style="color:#E06C75">"type"</span><span style="color:#ABB2BF">:</span><span style="color:#98C379">"progress"</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"t_ms"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">2.000</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"s_mm"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">0.020</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"count"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">2</span><span style="color:#ABB2BF">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// 每批次（預設 5 點）後輸出並阻塞，等待 stdin：</span></span>
+<span class="line"><span style="color:#ABB2BF">{</span><span style="color:#E06C75">"type"</span><span style="color:#ABB2BF">:</span><span style="color:#98C379">"batch_end"</span><span style="color:#ABB2BF">,</span><span style="color:#E06C75">"count"</span><span style="color:#ABB2BF">:</span><span style="color:#D19A66">5</span><span style="color:#ABB2BF">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// stdin 接收到 continue → 繼續；接收到 end → 提前退出</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// 最終正常退出：Node.js 偵測到 close 事件，code=0</span></span></code></pre> </div> </div>    <h2>4. 快速啟動</h2> <p>確認 C99 引擎已編譯後，啟動 Node.js 伺服器：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="# 1. 編譯 C99 引擎（需要 CMake + MSVC 或 gcc）
+cd RTCP_Engine
+cmake -B build
+cmake --build build --config Release
+
+# 2. 安裝 Node.js 依賴並啟動伺服器
+cd ..
+npm install
+node server.js
+# → RTCP server: http://localhost:3000" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#7F848E;font-style:italic"># 1. 編譯 C99 引擎（需要 CMake + MSVC 或 gcc）</span></span>
+<span class="line"><span style="color:#ABB2BF">cd RTCP_Engine</span></span>
+<span class="line"><span style="color:#ABB2BF">cmake </span><span style="color:#56B6C2">-</span><span style="color:#ABB2BF">B build</span></span>
+<span class="line"><span style="color:#ABB2BF">cmake </span><span style="color:#56B6C2">--</span><span style="color:#ABB2BF">build build </span><span style="color:#56B6C2">--</span><span style="color:#ABB2BF">config Release</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic"># 2. 安裝 Node.js 依賴並啟動伺服器</span></span>
+<span class="line"><span style="color:#ABB2BF">cd ..</span></span>
+<span class="line"><span style="color:#ABB2BF">npm install</span></span>
+<span class="line"><span style="color:#ABB2BF">node server.js</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic"># → RTCP server: http://localhost:3000</span></span></code></pre> </div> </div>   <p>開啟瀏覽器進入 <code>http://localhost:3000</code>，依序操作四個標籤：</p> <ol> <li><strong>Machine Config</strong>：填入機台幾何參數（Pivot 長度、A/C 軸行程）</li> <li><strong>G-Code Input</strong>：上傳或貼上 FANUC 五軸 G-code 程式碼</li> <li><strong>Export / Run</strong>：下載 CSV + JSON，點擊「Run Server」，即時觀察 SSE 進度串流與批次確認</li> <li><strong>Visualize</strong>：上傳 <code>result.csv</code>，以 2D/3D 圖表驗證插補結果</li> </ol> <div class="call tip"> <div class="ci">💡</div> <div> <strong>設計要點：POST 端點兼任 SSE 通道</strong> <p>本章最關鍵的 SSE 技巧是：<code>POST /run</code> 不是傳統的「回傳 JSON 的 REST 端點」，而是在接收 POST Body 後，立即切換為長連線的推播通道（<code>flushHeaders()</code>）。這個模式讓「觸發操作」與「接收推播」合而為一，省去額外的 GET SSE 端點，也讓 engine 的生命週期與前端的連線狀態嚴格綁定。</p> </div> </div> <div class="call warn"> <div class="ci">⚠️</div> <div> <strong>單一引擎實例保護</strong> <p>伺服器以全域變數 <code>engine</code> 追蹤目前是否有引擎在執行。若重複觸發 <code>POST /run</code>，伺服器會回傳 <strong>409 Conflict</strong>，避免多個子行程同時競爭同一個輸出檔案。前端應在收到 <code>exit</code> 事件後才重新啟用「Run」按鈕。</p> </div> </div>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>Windows 環境建置</span> </a> <a href="/sse-guide/ch04-practice" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

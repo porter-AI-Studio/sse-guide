@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>核心概念 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"></head>Node.js SSE 簡易指南 <meta name="description" content="了解 Node.js 與 Server-Sent Events (SSE) 的基本原理與應用場景。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <span class="clabel">指南</span> <h1>核心概念：什麼是 Node.js 與 SSE？</h1> <p class="cdesc">了解 Node.js 的事件驅動特性，以及 Server-Sent Events (SSE) 如何實現單向即時推播。</p> <h2>Node.js 簡介</h2> <p>Node.js 是一個基於 Chrome V8 引擎的 JavaScript 執行環境。它的最大特色是<strong>事件驅動 (Event-driven)</strong> 與<strong>非阻塞 I/O (Non-blocking I/O)</strong>，這使得它非常適合處理大量併發連線與即時資料傳輸的應用場景。</p> <p>傳統的前端工程師若要跨足後端，Node.js 往往是最好的橋樑，因為可以使用熟悉的 JavaScript 語法來撰寫後端邏輯。不過，從前端走向後端，還需要補充 HTTP 協定、資料庫以及伺服器框架（例如 Express 或 NestJS）的知識。</p> <figure class="ss"> <pre class="mermaid">flowchart TD
+    A[你的程式碼] --> B[呼叫非同步 API]
+    B --> C[交給 libuv / OS]
+    C --> D[Event Queue 等待回調]
+    D --> E{Event Loop 輪詢}
+    E --> F[執行 Callback]
+    F --> A
+    C -.-> |完成通知| D</pre> <figcaption>圖：Node.js 事件循環架構圖</figcaption> </figure> <h2>Server-Sent Events (SSE) 技術詳解</h2> <p><strong>Server-Sent Events (SSE)</strong> 是一種基於 HTTP 的伺服器推播技術。它允許伺服器將即時更新主動傳送給客戶端（通常是瀏覽器），而不需要客戶端不斷地發出請求。</p> <div class="call tip"> <div class="ci">💡</div> <p><strong>反轉傳統模式：</strong> 在傳統模式中，客戶端必須主動向伺服器要資料。而 SSE 反轉了這個模式，讓伺服器可以在資料準備好時，立刻「推播」給客戶端。</p> </div> <pre class="mermaid">  sequenceDiagram
+      participant C as 客戶端 (Browser)
+      participant S as 伺服器 (Node.js)
+      
+      Note over C,S: 1. 傳統 HTTP 請求 (需不斷詢問)
+      C->>S: GET /data (有新資料嗎？)
+      S-->>C: 沒有
+      C->>S: GET /data (有新資料嗎？)
+      S-->>C: 有，給你資料
+      
+      Note over C,S: 2. SSE 單向推播 (連線一次，隨時接收)
+      C->>S: GET /api/events (建立 SSE 連線)
+      S-->>C: 200 OK (Content-Type: text/event-stream)
+      S->>C: data: 第一筆資料
+      S->>C: data: 第二筆資料
+  </pre> <h3>技術特點與優勢</h3> <ul> <li><strong>單向通信：</strong> 資料流只能從伺服器推播到客戶端，非常適合需要伺服器主動更新狀態的情境。</li> <li><strong>基於標準 HTTP：</strong> 無需特殊的通訊協定，完全相容於現有的網路基礎設施。</li> <li><strong>輕量高效：</strong> 相較於 WebSocket 更加輕巧，資源消耗較少。</li> <li><strong>自動重連：</strong> 內建斷線自動重連機制。</li> <li><strong>純文字傳輸：</strong> 設計用來傳輸 UTF-8 編碼的文字資料，非常適合傳送 JSON 或純文字。</li> </ul> <figure class="ss"> <pre class="mermaid">flowchart LR
+    A([Client 發出請求]) --> B[建立 HTTP 連線]
+    B --> C{連線成功?}
+    C -- 是 --> D[保持長連線開放]
+    C -- 否 --> E([連線失敗])
+    D --> F[Server 推送 data 事件]
+    F --> G[Client 接收並處理]
+    G --> F
+    G --> H{連線中斷?}
+    H -- 是 --> I[自動重連 retry]
+    I --> B
+    H -- 否 --> F</pre> <figcaption>圖：SSE 連線生命週期流程圖</figcaption> </figure> <h3>SSE vs WebSocket vs Long Polling</h3> <table> <thead> <tr> <th>特性</th> <th>Server-Sent Events (SSE)</th> <th>WebSocket</th> <th>Long Polling (長輪詢)</th> </tr> </thead> <tbody> <tr> <td><strong>通訊方向</strong></td> <td>單向 (伺服器 &rarr; 客戶端)</td> <td>雙向全雙工</td> <td>單向 (多次請求-回應循環)</td> </tr> <tr> <td><strong>基礎協定</strong></td> <td>HTTP</td> <td>WebSocket 協定</td> <td>HTTP</td> </tr> <tr> <td><strong>自動重連</strong></td> <td>內建支援</td> <td>需手動實作</td> <td>需手動實作</td> </tr> <tr> <td><strong>適用場景</strong></td> <td>即時通知、資料流、打字機效果</td> <td>聊天室、協作編輯、遊戲</td> <td>相容性極度受限的舊環境</td> </tr> </tbody> </table> <h3>常見應用場景</h3> <ol> <li><strong>AI 聊天機器人：</strong> 例如 ChatGPT 的「打字機效果」，伺服器會將 LLM 產生的詞元 (Token) 透過 SSE 即時推播到前端。</li> <li><strong>即時資料監控：</strong> 金融市場的股票價格更新，或是伺服器資源（CPU、記憶體）的監控儀表板。</li> <li><strong>系統即時通知：</strong> 結合 Redis Pub/Sub，實作診所叫號、餐廳排隊等系統後端的推播架構。</li> </ol>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <div class="ph" data-astro-cid-mw7aashj></div> <a href="/sse-guide/ch02-install" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>Windows 環境建置</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

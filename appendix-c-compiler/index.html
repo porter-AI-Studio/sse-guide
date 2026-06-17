@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>VS Code 建置 C 語言環境指南 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"><style>.cb-wrap[data-astro-cid-jgrc2lfe]{margin-bottom:1.25rem}.cb-bar[data-astro-cid-jgrc2lfe]{display:flex;align-items:center;justify-content:space-between;background:#1a1a2e;border-radius:6px 6px 0 0;border:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05);padding:.18rem .5rem .18rem .75rem;min-height:1.8rem}.cb-label[data-astro-cid-jgrc2lfe]{color:#a6adc8;font-family:Fira Code,Cascadia Code,Consolas,monospace;font-size:.73rem;letter-spacing:.04em}.cb-inner[data-astro-cid-jgrc2lfe] pre{border-radius:0 0 8px 8px!important;margin-bottom:0!important}.cb-copy[data-astro-cid-jgrc2lfe]{background:#ffffff14;color:#888;border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:.15rem .55rem;font-size:.7rem;cursor:pointer;transition:all .15s;flex-shrink:0}.cb-copy[data-astro-cid-jgrc2lfe]:hover{background:#ffffff2e;color:#fff}.cb-copy[data-astro-cid-jgrc2lfe].copied{color:#4ec9b0;border-color:#4ec9b0}
+</style></head>Node.js SSE 簡易指南 <meta name="description" content="Windows 環境下安裝 MinGW C/C++ 編譯器與 VS Code 開發環境配置的簡易指南。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <span class="clabel">附錄</span> <h1>VS Code 建置 C 語言編譯環境指南</h1> <p class="cdesc">本附錄整理自內部知識庫的《VS Code 建置 C 語言環境》，主要協助開發者在 Windows 環境下安裝 C/C++ 編譯器 (MinGW)，以便編譯如 RTCP C99 引擎等執行檔。</p> <h2>1. 安裝 VS Code 與相關套件</h2> <p>首先確保您已安裝 <a href="https://code.visualstudio.com/" target="_blank">Visual Studio Code</a>。進入 VS Code 後，前往 Extensions (延伸模組) 頁面，安裝以下套件：</p> <ul> <li><strong>C/C++</strong> (Microsoft 官方提供)</li> <li><strong>C/C++ Extension Pack</strong></li> <li><strong>Code Runner</strong> (方便一鍵執行測試程式)</li> </ul> <p>安裝完成後，建議<strong>重新啟動 VS Code</strong> 以確保套件正常載入。</p> <h2>2. 下載並安裝 MinGW 編譯器</h2> <p>在 Windows 下我們通常使用 MinGW (Minimalist GNU for Windows) 作為 C/C++ 的編譯工具：</p> <ol> <li>前往 SourceForge 下載 <a href="https://sourceforge.net/projects/mingw/" target="_blank">MinGW Installation Manager</a>。</li> <li>執行安裝程式（建議保留預設安裝路徑 <code>C:\MinGW</code>）。</li> <li>打開 <strong>MinGW Installation Manager</strong>，在基本套件清單中，勾選以下兩項並選擇 <em>Mark for Installation</em>：
+<ul> <li><code>mingw32-gcc-g++ (bin)</code>：GCC 與 G++ 編譯器核心。</li> <li><code>mingw32-gdb (bin)</code>：GDB 除錯工具。</li> </ul> </li> <li>點擊左上角選單 <strong>Installation</strong> > <strong>Apply Changes</strong>，等待下載與安裝完成。</li> </ol> <h2>3. 配置 Windows 環境變數</h2> <p>為了能在命令提示字元 (CMD/PowerShell) 或 VS Code 終端機中直接呼叫 <code>gcc</code>，必須將 MinGW 的執行檔路徑加入系統的 Path 中：</p> <ol> <li>按下 Windows 鍵，搜尋並開啟「<strong>編輯系統環境變數</strong>」。</li> <li>點擊右下角的「<strong>環境變數</strong>」按鈕。</li> <li>在「系統變數」清單中找到 <code>Path</code>，點擊「編輯」。</li> <li>點擊「新增」，並填入 <code>C:\MinGW\bin</code>（若您安裝在其他路徑，請輸入對應的 bin 資料夾路徑）。</li> <li>連續點擊「確定」儲存設定。</li> <li><strong>重要：請重新啟動電腦</strong>，或至少重新開啟所有終端機與 VS Code，讓環境變數生效。</li> </ol> <h2>4. 驗證編譯器安裝</h2> <p>開啟終端機 (PowerShell 或 CMD)，輸入以下指令檢查是否安裝成功：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="gcc --version
+g++ --version
+gdb --version" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#ABB2BF">gcc </span><span style="color:#56B6C2">--</span><span style="color:#ABB2BF">version</span></span>
+<span class="line"><span style="color:#ABB2BF">g</span><span style="color:#56B6C2">++</span><span style="color:#56B6C2"> --</span><span style="color:#ABB2BF">version</span></span>
+<span class="line"><span style="color:#ABB2BF">gdb </span><span style="color:#56B6C2">--</span><span style="color:#ABB2BF">version</span></span></code></pre> </div> </div>  <script type="module">document.querySelectorAll(".cb-copy").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.code;t&&navigator.clipboard.writeText(t).then(()=>{e.textContent="已複製!",e.classList.add("copied"),setTimeout(()=>{e.textContent="複製",e.classList.remove("copied")},2e3)})})});</script> <p>如果成功印出版本資訊，代表您的 C/C++ 編譯環境已經準備就緒，可以開始編譯 C99 引擎了！</p>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>名詞解釋</span> </a> <a href="/sse-guide/about" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>關於作者</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

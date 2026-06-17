@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RTCP 插補方法解析 | </title><style>.katex-container[data-astro-cid-a7xzcznn]{background:linear-gradient(145deg,#0f172a,#1e293b);border:1px solid #334155;border-left:4px solid #38bdf8;border-radius:12px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 10px 15px -3px #0000004d;overflow-x:auto;color:#f8fafc}.katex-inline[data-astro-cid-a7xzcznn]{color:#38bdf8;background:#38bdf81a;padding:2px 6px;border-radius:4px}.continuity-bar[data-astro-cid-a7xzcznn]{display:flex;gap:0;margin:1.5rem 0;border-radius:10px;overflow:hidden;box-shadow:0 4px 6px -1px #0003}.continuity-bar[data-astro-cid-a7xzcznn] .seg[data-astro-cid-a7xzcznn]{flex:1;padding:.8rem .5rem;text-align:center;font-size:.85rem;font-weight:600;letter-spacing:.05em}.continuity-bar[data-astro-cid-a7xzcznn] .c0[data-astro-cid-a7xzcznn]{background:#7f1d1d;color:#fca5a5}.continuity-bar[data-astro-cid-a7xzcznn] .c1[data-astro-cid-a7xzcznn]{background:#713f12;color:#fde68a}.continuity-bar[data-astro-cid-a7xzcznn] .c2[data-astro-cid-a7xzcznn]{background:#14532d;color:#86efac}.formula-note[data-astro-cid-a7xzcznn]{background:#1e293bb3;border-radius:8px;border:1px solid #334155;padding:1.2rem 1.5rem;margin:1rem 0;font-size:.95rem;color:#cbd5e1;line-height:1.8}.formula-note[data-astro-cid-a7xzcznn] strong[data-astro-cid-a7xzcznn]{color:#f8fafc}.profile-row[data-astro-cid-a7xzcznn]{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin:1.5rem 0}@media(max-width:768px){.profile-row[data-astro-cid-a7xzcznn]{grid-template-columns:1fr}}.profile-card[data-astro-cid-a7xzcznn]{background:#1e293b;border-radius:12px;padding:1.5rem;border:1px solid #334155;box-shadow:0 4px 6px -1px #0003}.profile-card[data-astro-cid-a7xzcznn] h4[data-astro-cid-a7xzcznn]{margin:0 0 1rem;font-size:1rem;color:#7dd3fc}.velocity-chart[data-astro-cid-a7xzcznn]{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:1.5rem;margin:1.5rem 0;box-shadow:0 10px 15px -3px #0000004d}.velocity-chart[data-astro-cid-a7xzcznn] svg[data-astro-cid-a7xzcznn]{display:block;width:100%;height:auto}
+</style><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"></head>Node.js SSE 簡易指南 <meta name="description" content="深入探討五軸加工中常用的 RTCP 插補方法，包含 Euler、Slerp、Squad 與 Quintic 等演算法特徵與適用情境。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"> <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script> <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script> <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (typeof renderMathInElement !== "undefined") {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\(', right: '\\)', display: false}
+          ]
+        });
+      } else {
+        // Fallback if script loads slower
+        window.onload = function() {
+          renderMathInElement(document.body, {
+            delimiters: [
+              {left: '$$', right: '$$', display: true},
+              {left: '\\(', right: '\\)', display: false}
+            ]
+          });
+        };
+      }
+    });
+  </script>  <span class="clabel" data-astro-cid-a7xzcznn>指南</span> <h1 data-astro-cid-a7xzcznn>RTCP 插補方法解析 (Interpolation Methods)</h1> <p class="cdesc" data-astro-cid-a7xzcznn>在五軸加工中，為平滑過渡刀具的姿態，我們需要依靠數學演算法進行姿態插補。不同的插補方法會決定姿態變化的幾何連續性與最終加工表面的品質。</p>  <h2 data-astro-cid-a7xzcznn>前置知識：四元數 (Quaternion)</h2> <p data-astro-cid-a7xzcznn>Slerp、Squad 等方法都建立在<strong data-astro-cid-a7xzcznn>四元數</strong>的基礎上。四元數是一種擴展複數的超複數，可以用來表示三維空間中的旋轉，並且完全避免歐拉角的<strong data-astro-cid-a7xzcznn>萬向鎖 (Gimbal Lock)</strong> 問題。</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+& q = w + x\mathbf{i} + y\mathbf{j} + z\mathbf{k} \\
+& \text{其中 } w \in \mathbb{R} \text{，向量部分 } (x, y, z) \in \mathbb{R}^3 \\
+& \mathbf{i}^2 = \mathbf{j}^2 = \mathbf{k}^2 = \mathbf{i}\mathbf{j}\mathbf{k} = -1
+\end{aligned}
+$$</div> <div class="formula-note" data-astro-cid-a7xzcznn>
+代表旋轉的<strong data-astro-cid-a7xzcznn>單位四元數</strong>（Unit Quaternion）必須滿足：<br data-astro-cid-a7xzcznn> <span class="katex-inline" data-astro-cid-a7xzcznn>\( \|q\| = \sqrt{w^2 + x^2 + y^2 + z^2} = 1 \)</span> <br data-astro-cid-a7xzcznn><br data-astro-cid-a7xzcznn>
+若旋轉軸為單位向量 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \mathbf{\hat{n}} = (n_x, n_y, n_z) \)</span>，旋轉角度為 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \theta \)</span>，則：<br data-astro-cid-a7xzcznn> <span class="katex-inline" data-astro-cid-a7xzcznn>\( q = \cos\Big(\frac{\theta}{2}\Big) + \sin\Big(\frac{\theta}{2}\Big)(n_x\mathbf{i} + n_y\mathbf{j} + n_z\mathbf{k}) \)</span> </div>  <h2 data-astro-cid-a7xzcznn>幾何連續性 (Continuity) 的意義</h2> <p data-astro-cid-a7xzcznn>幾何連續性決定了路徑在節點（控制點）交接處的「平滑程度」，直接影響機台是否會產生震動與表面條紋。</p> <div class="continuity-bar" data-astro-cid-a7xzcznn> <div class="seg c0" data-astro-cid-a7xzcznn>C0<br data-astro-cid-a7xzcznn>位置連續<br data-astro-cid-a7xzcznn>（速度可能跳變）</div> <div class="seg c1" data-astro-cid-a7xzcznn>C1<br data-astro-cid-a7xzcznn>速度連續<br data-astro-cid-a7xzcznn>（加速度可能跳變）</div> <div class="seg c2" data-astro-cid-a7xzcznn>C2<br data-astro-cid-a7xzcznn>加速度連續<br data-astro-cid-a7xzcznn>（最平滑）</div> </div> <div class="formula-note" data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>C0（歐拉角）：</strong> 節點前後角速度 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \omega \)</span> 可能不同，驅動器必須「剎車後再加速」，產生衝擊。<br data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>C1（Slerp/Squad）：</strong> 角速度連續，但角加速度 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \alpha \)</span> 可能跳變，類似汽車在彎道入口突然轉向。<br data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>C2（Quintic）：</strong> 角加速度連續，力矩 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \tau = I \cdot \alpha \)</span> 也平滑，機台振動最小，是精加工的首選。
+</div>  <h2 data-astro-cid-a7xzcznn>四種主要插補方法詳解</h2>  <h3 data-astro-cid-a7xzcznn>1. 歐拉角插補 (Euler Interpolation)</h3> <p data-astro-cid-a7xzcznn>歐拉角插補是最直觀的插補方式，對每個旋轉軸（如 A、B、C 軸）的角度進行獨立的<strong data-astro-cid-a7xzcznn>線性插值</strong>。</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+\theta(t) &= (1 - t) \cdot \theta_0 + t \cdot \theta_1 \quad , \quad t \in [0, 1] \\
+\theta(t) &= \theta_0 + t \cdot \Delta\theta \quad , \quad \Delta\theta = \theta_1 - \theta_0 \\
+\omega(t) &= \frac{d\theta}{dt} = \Delta\theta \quad \rightarrow \quad \text{不連續於節點}
+\end{aligned}
+$$</div> <div class="formula-note" data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>問題根源：</strong> 三個旋轉軸（A、B、C）各自線性插值，順序決定結果，且在萬向鎖奇異點附近會讓插補路徑嚴重失真。
+</div> <ul data-astro-cid-a7xzcznn> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>幾何連續性</strong>：C0（在節點處可能發生角速度突變，不平滑）</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>角速度特徵</strong>：不連續 (Discontinuous)，可能導致機台驅動器震動。</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>最佳適用情境</strong>：由於運算最快且邏輯單純，適合用於<strong data-astro-cid-a7xzcznn>快速除錯</strong>或是<strong data-astro-cid-a7xzcznn> G0 快速定位 (Rapids)</strong> 等非加工區段。</li> </ul>  <h3 data-astro-cid-a7xzcznn>2. 球面線性插補 (Slerp)</h3> <p data-astro-cid-a7xzcznn>Slerp (Spherical Linear Interpolation) 利用四元數在四維單位球面（S³）上尋找兩點間的<strong data-astro-cid-a7xzcznn>測地線（最短弧路徑）</strong>，實現等角速度插補。</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+\text{Slerp}(q_0, q_1 ; t) &= q_0 \frac{\sin((1-t)\Omega)}{\sin(\Omega)} + q_1 \frac{\sin(t\Omega)}{\sin(\Omega)} \\
+\Omega &= \arccos(q_0 \cdot q_1) = \arccos(w_0 w_1 + x_0 x_1 + y_0 y_1 + z_0 z_1) \\
+\frac{d}{dt} \text{Slerp}(q_0,q_1;t) &\rightarrow \|\omega\| = \Omega = \text{Constant}
+\end{aligned}
+$$</div> <div class="formula-note" data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>注意：</strong> 因為 <span class="katex-inline" data-astro-cid-a7xzcznn>\( q \)</span> 與 <span class="katex-inline" data-astro-cid-a7xzcznn>\( -q \)</span> 表示同一旋轉，若 <span class="katex-inline" data-astro-cid-a7xzcznn>\( q_0 \cdot q_1 < 0 \)</span>，需要先將其中一個四元數取負號，確保插補走的是「短弧」而非「長弧」。
+</div> <ul data-astro-cid-a7xzcznn> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>幾何連續性</strong>：C1（角速度連續，但在線段交界處加速度不連續）</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>角速度特徵</strong>：等角速度 (Constant arc rate)，姿態變化均勻。</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>最佳適用情境</strong>：能避免萬向鎖並保持穩定的轉速，是目前最普遍使用的<strong data-astro-cid-a7xzcznn>標準生產加工</strong>插補法。</li> </ul>  <h3 data-astro-cid-a7xzcznn>3. 球面四邊形插補 (Squad)</h3> <p data-astro-cid-a7xzcznn>Squad (Spherical Quadrangle Interpolation) 是 Slerp 的進階版本，結合三次 Hermite 樣條曲線的概念，透過引入<strong data-astro-cid-a7xzcznn>輔助控制點（inner quadrangle points）</strong>，讓多個姿態節點間的過渡更平滑。</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+s_i &= q_i \cdot \exp\left( -\frac{\log(q_i^{-1} \cdot q_{i+1}) + \log(q_i^{-1} \cdot q_{i-1})}{4} \right) \\
+\text{Squad}(q_i, q_{i+1} ; t) &= \text{Slerp}\Big( \text{Slerp}(q_i, q_{i+1} ; t), \text{Slerp}(s_i, s_{i+1} ; t), 2t(1-t) \Big)
+\end{aligned}
+$$</div> <div class="formula-note" data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>直覺理解：</strong> 就像 Bezier 曲線用控制點拉伸形狀，Squad 用 <span class="katex-inline" data-astro-cid-a7xzcznn>\( s_i \)</span> 在球面上「彎曲」相鄰兩段 Slerp 的交接，讓角速度在節點前後可以平滑過渡。
+</div> <ul data-astro-cid-a7xzcznn> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>幾何連續性</strong>：C1（保證多個控制點之間角速度平滑過渡）</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>角速度特徵</strong>：三次樣條曲線特徵，角加速度變化更平緩。</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>最佳適用情境</strong>：當 CAM 系統輸出的路徑點密集且需要微調時，適合用於<strong data-astro-cid-a7xzcznn>多線段路徑精修</strong>。</li> </ul>  <h3 data-astro-cid-a7xzcznn>4. 五次多項式插補 (Quintic Interpolation)</h3> <p data-astro-cid-a7xzcznn>運用五階多項式 (5th-order polynomial) 在旋轉空間中計算姿態軌跡，透過同時約束端點的<strong data-astro-cid-a7xzcznn>位置、速度與加速度</strong>（共 6 個邊界條件），確保 C2 連續性。</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+\theta(t) &= a_0 + a_1 t + a_2 t^2 + a_3 t^3 + a_4 t^4 + a_5 t^5 \\
+\end{aligned}
+$$</div> <p data-astro-cid-a7xzcznn>6 個邊界條件決定 6 個係數 <span class="katex-inline" data-astro-cid-a7xzcznn>\( a_0 \dots a_5 \)</span>，形成矩陣方程式：</p> <div class="katex-container" data-astro-cid-a7xzcznn>$$
+\begin{bmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+1 & 1 & 1 & 1 & 1 & 1 \\
+0 & 1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 2 & 3 & 4 & 5 \\
+0 & 0 & 2 & 0 & 0 & 0 \\
+0 & 0 & 2 & 6 & 12 & 20
+\end{bmatrix}
+\begin{bmatrix}
+a_0 \\ a_1 \\ a_2 \\ a_3 \\ a_4 \\ a_5
+\end{bmatrix}
+=
+\begin{bmatrix}
+\theta_0 \\ \theta_1 \\ \omega_0 \\ \omega_1 \\ \alpha_0 \\ \alpha_1
+\end{bmatrix}
+$$</div> <div class="formula-note" data-astro-cid-a7xzcznn> <strong data-astro-cid-a7xzcznn>為何是五次（而非三次）？</strong><br data-astro-cid-a7xzcznn>
+三次多項式只有 4 個係數，最多只能同時約束<em data-astro-cid-a7xzcznn>位置 + 速度</em>，無法控制加速度，所以只能達到 C1。<br data-astro-cid-a7xzcznn>
+五次多項式多出 2 個自由度，剛好用來「鎖定」兩端的加速度，達到 C2。
+</div> <ul data-astro-cid-a7xzcznn> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>幾何連續性</strong>：C2（角加速度連續，將機台震動降至最低）</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>角速度特徵</strong>：五階多項式平滑變化。</li> <li data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>最佳適用情境</strong>：運算量最大，專門用於<strong data-astro-cid-a7xzcznn>要求最高表面品質的精加工</strong>（如航太零件、光學模具）。</li> </ul>  <h2 data-astro-cid-a7xzcznn>角速度曲線剖面比較</h2> <p data-astro-cid-a7xzcznn>下圖示意各方法在<strong data-astro-cid-a7xzcznn>單一插補區段</strong>內的角速度 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \omega(t) \)</span> 與角加速度 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \alpha(t) \)</span> 變化形態。</p> <div class="velocity-chart" data-astro-cid-a7xzcznn> <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style="max-width:700px;margin:auto" data-astro-cid-a7xzcznn> <defs data-astro-cid-a7xzcznn> <pattern id="grid" width="70" height="52" patternUnits="userSpaceOnUse" data-astro-cid-a7xzcznn> <path d="M 70 0 L 0 0 0 52" fill="none" stroke="#1e293b" stroke-width="1" data-astro-cid-a7xzcznn></path> </pattern> </defs> <rect width="700" height="260" fill="#0f172a" rx="12" data-astro-cid-a7xzcznn></rect> <rect width="700" height="260" fill="url(#grid)" rx="12" data-astro-cid-a7xzcznn></rect> <text x="16" y="24" fill="#64748b" font-size="12" font-family="monospace" data-astro-cid-a7xzcznn>ω(t) 角速度剖面</text> <!-- Euler --> <g data-astro-cid-a7xzcznn> <text x="24" y="52" fill="#f87171" font-size="12" font-family="monospace" font-weight="bold" data-astro-cid-a7xzcznn>Euler（C0）</text> <polyline points="24,80 162,80 162,60 302,60" fill="none" stroke="#f87171" stroke-width="2.5" stroke-dasharray="6,4" data-astro-cid-a7xzcznn></polyline> <text x="310" y="64" fill="#f87171" font-size="11" data-astro-cid-a7xzcznn>← 節點跳變</text> </g> <!-- Slerp --> <g data-astro-cid-a7xzcznn> <text x="24" y="118" fill="#fbbf24" font-size="12" font-family="monospace" font-weight="bold" data-astro-cid-a7xzcznn>Slerp（C1）</text> <polyline points="24,145 162,145" fill="none" stroke="#fbbf24" stroke-width="2.5" data-astro-cid-a7xzcznn></polyline> <line x1="162" y1="145" x2="162" y2="130" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="3,2" data-astro-cid-a7xzcznn></line> <polyline points="162,130 302,130" fill="none" stroke="#fbbf24" stroke-width="2.5" data-astro-cid-a7xzcznn></polyline> <text x="310" y="134" fill="#fbbf24" font-size="11" data-astro-cid-a7xzcznn>← 加速度不連續</text> </g> <!-- Quintic --> <g data-astro-cid-a7xzcznn> <text x="24" y="190" fill="#4ade80" font-size="12" font-family="monospace" font-weight="bold" data-astro-cid-a7xzcznn>Quintic（C2）</text> <path d="M 24,232 C 70,232 90,200 162,207 S 250,215 302,220" fill="none" stroke="#4ade80" stroke-width="3" data-astro-cid-a7xzcznn></path> <text x="310" y="215" fill="#4ade80" font-size="11" data-astro-cid-a7xzcznn>← 平滑 S 曲線</text> </g> <!-- Guides --> <line x1="0" y1="100" x2="700" y2="100" stroke="#1e3a5f" stroke-width="1" data-astro-cid-a7xzcznn></line> <line x1="0" y1="168" x2="700" y2="168" stroke="#1e3a5f" stroke-width="1" data-astro-cid-a7xzcznn></line> <line x1="162" y1="0" x2="162" y2="260" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,4" data-astro-cid-a7xzcznn></line> <text x="155" y="254" fill="#94a3b8" font-size="10" text-anchor="middle" data-astro-cid-a7xzcznn>t=0.5（節點交接）</text> </svg> </div>  <h2 data-astro-cid-a7xzcznn>運算成本 vs. 品質權衡</h2> <div class="profile-row" data-astro-cid-a7xzcznn> <div class="profile-card" data-astro-cid-a7xzcznn> <h4 data-astro-cid-a7xzcznn>每段路徑所需浮點運算量</h4> <div class="katex-container" style="margin: 0; padding: 1rem; font-size: 0.95rem" data-astro-cid-a7xzcznn>$$
+\begin{aligned}
+\text{Euler}   &\approx \mathcal{O}(3)   && \text{// 三軸各一次乘法} \\
+\text{Slerp}   &\approx \mathcal{O}(25)  && \text{// arccos + sin + 8 乘法} \\
+\text{Squad}   &\approx \mathcal{O}(60)  && \text{// 兩次 Slerp + log/exp} \\
+\text{Quintic} &\approx \mathcal{O}(120) && \text{// 矩陣求解 + 5 次方計算}
+\end{aligned}
+$$</div> </div> <div class="profile-card" data-astro-cid-a7xzcznn> <h4 data-astro-cid-a7xzcznn>選用決策流程</h4> <div style="font-size:0.95rem; line-height:2.2; color:#cbd5e1; margin-top: 0.5rem" data-astro-cid-a7xzcznn> <span style="display:inline-block;width:1.5rem" data-astro-cid-a7xzcznn>🟥</span> <strong style="color:#f87171; display:inline-block; width: 140px" data-astro-cid-a7xzcznn>G0 / 快速除錯</strong> ➔ Euler<br data-astro-cid-a7xzcznn> <span style="display:inline-block;width:1.5rem" data-astro-cid-a7xzcznn>🟨</span> <strong style="color:#fbbf24; display:inline-block; width: 140px" data-astro-cid-a7xzcznn>標準生產加工</strong> ➔ Slerp<br data-astro-cid-a7xzcznn> <span style="display:inline-block;width:1.5rem" data-astro-cid-a7xzcznn>🟦</span> <strong style="color:#60a5fa; display:inline-block; width: 140px" data-astro-cid-a7xzcznn>密集路徑點精修</strong> ➔ Squad<br data-astro-cid-a7xzcznn> <span style="display:inline-block;width:1.5rem" data-astro-cid-a7xzcznn>🟩</span> <strong style="color:#4ade80; display:inline-block; width: 140px" data-astro-cid-a7xzcznn>高表面品質精加工</strong> ➔ Quintic
+</div> </div> </div>  <h2 data-astro-cid-a7xzcznn>RTCP 插補方法比較總結</h2> <table data-astro-cid-a7xzcznn> <thead data-astro-cid-a7xzcznn> <tr data-astro-cid-a7xzcznn> <th data-astro-cid-a7xzcznn>插補方法 (Method)</th> <th data-astro-cid-a7xzcznn>幾何連續性</th> <th data-astro-cid-a7xzcznn>核心數學</th> <th data-astro-cid-a7xzcznn>角速度特徵</th> <th data-astro-cid-a7xzcznn>最佳適用情境</th> </tr> </thead> <tbody data-astro-cid-a7xzcznn> <tr data-astro-cid-a7xzcznn> <td data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>euler</strong> (歐拉角)</td> <td data-astro-cid-a7xzcznn>C0</td> <td data-astro-cid-a7xzcznn>線性插值 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \theta(t) \)</span></td> <td data-astro-cid-a7xzcznn>不連續 (Discontinuous)</td> <td data-astro-cid-a7xzcznn>快速除錯、G0 快速定位</td> </tr> <tr data-astro-cid-a7xzcznn> <td data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>slerp</strong> (球面線性)</td> <td data-astro-cid-a7xzcznn>C1</td> <td data-astro-cid-a7xzcznn>四元數球面弧 <span class="katex-inline" data-astro-cid-a7xzcznn>\( \Omega \)</span></td> <td data-astro-cid-a7xzcznn>等角速度 (Constant arc rate)</td> <td data-astro-cid-a7xzcznn>標準生產加工</td> </tr> <tr data-astro-cid-a7xzcznn> <td data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>squad</strong> (球面四邊形)</td> <td data-astro-cid-a7xzcznn>C1</td> <td data-astro-cid-a7xzcznn>雙層 Slerp + 輔助點 <span class="katex-inline" data-astro-cid-a7xzcznn>\( s_i \)</span></td> <td data-astro-cid-a7xzcznn>三次樣條曲線 (Cubic spline)</td> <td data-astro-cid-a7xzcznn>多線段路徑精修</td> </tr> <tr data-astro-cid-a7xzcznn> <td data-astro-cid-a7xzcznn><strong data-astro-cid-a7xzcznn>quintic</strong> (五次多項式)</td> <td data-astro-cid-a7xzcznn>C2</td> <td data-astro-cid-a7xzcznn>矩陣求解 6 邊界條件</td> <td data-astro-cid-a7xzcznn>五階多項式平滑 (S-curve)</td> <td data-astro-cid-a7xzcznn>要求最高表面品質的精加工</td> </tr> </tbody> </table>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span> </a> <a href="/sse-guide/glossary" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>名詞解釋</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

@@ -1,0 +1,139 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Windows 環境建置 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"><style>.cb-wrap[data-astro-cid-jgrc2lfe]{margin-bottom:1.25rem}.cb-bar[data-astro-cid-jgrc2lfe]{display:flex;align-items:center;justify-content:space-between;background:#1a1a2e;border-radius:6px 6px 0 0;border:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05);padding:.18rem .5rem .18rem .75rem;min-height:1.8rem}.cb-label[data-astro-cid-jgrc2lfe]{color:#a6adc8;font-family:Fira Code,Cascadia Code,Consolas,monospace;font-size:.73rem;letter-spacing:.04em}.cb-inner[data-astro-cid-jgrc2lfe] pre{border-radius:0 0 8px 8px!important;margin-bottom:0!important}.cb-copy[data-astro-cid-jgrc2lfe]{background:#ffffff14;color:#888;border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:.15rem .55rem;font-size:.7rem;cursor:pointer;transition:all .15s;flex-shrink:0}.cb-copy[data-astro-cid-jgrc2lfe]:hover{background:#ffffff2e;color:#fff}.cb-copy[data-astro-cid-jgrc2lfe].copied{color:#4ec9b0;border-color:#4ec9b0}
+</style></head>Node.js SSE 簡易指南 <meta name="description" content="如何在 Windows 環境下正確安裝與設定 Node.js。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <span class="clabel">指南</span> <h1>Windows 環境建置：Node.js 安裝教學</h1> <p class="cdesc">了解如何在 Windows 上快速建置 Node.js 開發環境，為後續的 SSE 實戰打下基礎。</p> <h2>推薦的安裝方式：NVM for Windows</h2> <p>雖然您可以直接從官方網站下載 <code>.msi</code> 安裝檔，但實務上我們強烈建議使用 <strong>NVM (Node Version Manager)</strong> 來管理 Node.js 版本。這可以讓您在不同的專案間切換所需的 Node.js 版本，避免版本衝突。</p> <div class="call warn"> <div class="ci">⚠️</div> <p><strong>注意：</strong> 安裝 NVM for Windows 之前，請務必先將系統中已有的 Node.js 解除安裝，以免路徑衝突。</p> </div> <figure class="ss"> <pre class="mermaid">flowchart LR
+    A([開始]) --> B[下載 NVM for Windows]
+    B --> C[執行安裝程式]
+    C --> D[nvm install 版本號]
+    D --> E[nvm use 版本號]
+    E --> F[node -v 驗證]
+    F --> G([完成])
+    </pre> <figcaption>圖：NVM for Windows 安裝流程</figcaption> </figure> <h3>Step 1. 下載並安裝 nvm-windows</h3> <p>前往 <a href="https://github.com/coreybutler/nvm-windows/releases" target="_blank">nvm-windows Releases 頁面</a>，下載 <code>nvm-setup.exe</code>，然後按照提示完成安裝。</p> <h3>Step 2. 安裝 Node.js</h3> <p>打開 PowerShell (建議使用系統管理員身分執行)，輸入以下指令來查詢可安裝的版本：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="nvm list available" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#ABB2BF">nvm list available</span></span></code></pre> </div> </div>  <script type="module">document.querySelectorAll(".cb-copy").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.code;t&&navigator.clipboard.writeText(t).then(()=>{e.textContent="已複製!",e.classList.add("copied"),setTimeout(()=>{e.textContent="複製",e.classList.remove("copied")},2e3)})})});</script> <p>您會看到類似以下的輸出：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="(base) PS C:\Users\porte> nvm list available
+
+|   CURRENT    |     LTS      |  OLD STABLE  | OLD UNSTABLE |
+|--------------|--------------|--------------|--------------|
+|    26.3.0    |   24.16.0    |   0.12.18    |   0.11.16    |
+|    26.2.0    |   24.15.0    |   0.12.17    |   0.11.15    |
+|    26.1.0    |   24.14.1    |   0.12.16    |   0.11.14    |
+|    26.0.0    |   24.14.0    |   0.12.15    |   0.11.13    |
+|    25.9.0    |   24.13.1    |   0.12.14    |   0.11.12    |
+|    25.8.2    |   24.13.0    |   0.12.13    |   0.11.11    |
+|    25.8.1    |   24.12.0    |   0.12.12    |   0.11.10    |
+|    25.8.0    |   24.11.1    |   0.12.11    |    0.11.9    |
+|    25.7.0    |   24.11.0    |   0.12.10    |    0.11.8    |
+|    25.6.1    |   22.22.3    |    0.12.9    |    0.11.7    |
+|    25.6.0    |   22.22.2    |    0.12.8    |    0.11.6    |
+|    25.5.0    |   22.22.1    |    0.12.7    |    0.11.5    |
+|    25.4.0    |   22.22.0    |    0.12.6    |    0.11.4    |
+|    25.3.0    |   22.21.1    |    0.12.5    |    0.11.3    |
+|    25.2.1    |   22.21.0    |    0.12.4    |    0.11.2    |
+|    25.2.0    |   22.20.0    |    0.12.3    |    0.11.1    |
+|    25.1.0    |   22.19.0    |    0.12.2    |    0.11.0    |
+|    25.0.0    |   22.18.0    |    0.12.1    |    0.9.12    |
+|   24.10.0    |   22.17.1    |    0.12.0    |    0.9.11    |
+|    24.9.0    |   22.17.0    |   0.10.48    |    0.9.10    |" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="text"><code><span class="line"><span>(base) PS C:\Users\porte> nvm list available</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>|   CURRENT    |     LTS      |  OLD STABLE  | OLD UNSTABLE |</span></span>
+<span class="line"><span>|--------------|--------------|--------------|--------------|</span></span>
+<span class="line"><span>|    26.3.0    |   24.16.0    |   0.12.18    |   0.11.16    |</span></span>
+<span class="line"><span>|    26.2.0    |   24.15.0    |   0.12.17    |   0.11.15    |</span></span>
+<span class="line"><span>|    26.1.0    |   24.14.1    |   0.12.16    |   0.11.14    |</span></span>
+<span class="line"><span>|    26.0.0    |   24.14.0    |   0.12.15    |   0.11.13    |</span></span>
+<span class="line"><span>|    25.9.0    |   24.13.1    |   0.12.14    |   0.11.12    |</span></span>
+<span class="line"><span>|    25.8.2    |   24.13.0    |   0.12.13    |   0.11.11    |</span></span>
+<span class="line"><span>|    25.8.1    |   24.12.0    |   0.12.12    |   0.11.10    |</span></span>
+<span class="line"><span>|    25.8.0    |   24.11.1    |   0.12.11    |    0.11.9    |</span></span>
+<span class="line"><span>|    25.7.0    |   24.11.0    |   0.12.10    |    0.11.8    |</span></span>
+<span class="line"><span>|    25.6.1    |   22.22.3    |    0.12.9    |    0.11.7    |</span></span>
+<span class="line"><span>|    25.6.0    |   22.22.2    |    0.12.8    |    0.11.6    |</span></span>
+<span class="line"><span>|    25.5.0    |   22.22.1    |    0.12.7    |    0.11.5    |</span></span>
+<span class="line"><span>|    25.4.0    |   22.22.0    |    0.12.6    |    0.11.4    |</span></span>
+<span class="line"><span>|    25.3.0    |   22.21.1    |    0.12.5    |    0.11.3    |</span></span>
+<span class="line"><span>|    25.2.1    |   22.21.0    |    0.12.4    |    0.11.2    |</span></span>
+<span class="line"><span>|    25.2.0    |   22.20.0    |    0.12.3    |    0.11.1    |</span></span>
+<span class="line"><span>|    25.1.0    |   22.19.0    |    0.12.2    |    0.11.0    |</span></span>
+<span class="line"><span>|    25.0.0    |   22.18.0    |    0.12.1    |    0.9.12    |</span></span>
+<span class="line"><span>|   24.10.0    |   22.17.1    |    0.12.0    |    0.9.11    |</span></span>
+<span class="line"><span>|    24.9.0    |   22.17.0    |   0.10.48    |    0.9.10    |</span></span></code></pre> </div> </div>   <p>挑選一個最新的 LTS (長期支援) 版本，例如 <code>24.9.0</code>，然後安裝：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="(base) PS C:\Users\porte> node -v
+v24.9.0
+(base) PS C:\Users\porte> nvm install 24.9.0
+Installation complete.
+If you want to use this version, type:
+
+nvm use 24.9.0" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="text"><code><span class="line"><span>(base) PS C:\Users\porte> node -v</span></span>
+<span class="line"><span>v24.9.0</span></span>
+<span class="line"><span>(base) PS C:\Users\porte> nvm install 24.9.0</span></span>
+<span class="line"><span>Installation complete.</span></span>
+<span class="line"><span>If you want to use this version, type:</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>nvm use 24.9.0</span></span></code></pre> </div> </div>   <p>安裝完成後，告訴系統你要使用這個版本：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="nvm use 24.9.0" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#ABB2BF">nvm use </span><span style="color:#D19A66">24.9</span><span style="color:#ABB2BF">.</span><span style="color:#D19A66">0</span></span></code></pre> </div> </div>   <h3>Step 3. 驗證安裝</h3> <p>最後，確認 Node.js 與 npm 是否已正確安裝並設定在路徑中：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="(base) PS C:\Users\porte> node -v
+v24.9.0
+(base) PS C:\Users\porte> npm -v
+11.6.4" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="text"><code><span class="line"><span>(base) PS C:\Users\porte> node -v</span></span>
+<span class="line"><span>v24.9.0</span></span>
+<span class="line"><span>(base) PS C:\Users\porte> npm -v</span></span>
+<span class="line"><span>11.6.4</span></span></code></pre> </div> </div>   <p>如果能順利印出版本號，恭喜您的環境已經準備就緒！</p>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>核心概念</span> </a> <a href="/sse-guide/ch03-rtcp" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>RTCP 五軸插補系統：三層 SSE 架構</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

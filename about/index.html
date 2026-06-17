@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>關於作者 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"></head>Node.js SSE 簡易指南 <meta name="description" content="作者顏先生（Porter Yen）擁有超過三十年的技術實踐經驗，技術視野橫跨工業自動化、智慧製造、全端軟體開發與 AI 原生架構設計。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <p class="clabel">附錄 · 關於</p> <h1>關於作者</h1> <div style="display: flex; gap: 2rem; align-items: center; margin: 2rem 0; flex-wrap: wrap;"> <img src="/sse-guide/img/porter_avatar.png" alt="Porter Yen" style="width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"> <div> <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">顏先生 Porter Yen</h3> <p style="margin: 0; color: var(--accent); font-weight: bold; font-size: 0.95rem;">資深軟體架構師 · 30+ 年實踐者</p> <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--muted); font-style: italic;">AI 世代協同創作者 · 語言即是最強的開發工具</p> <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">porteryen@gmail.com</p> </div> </div> <p class="cdesc">作者顏先生（Porter Yen）擁有超過三十年的技術實踐經驗，技術視野橫跨工業自動化、智慧製造、全端軟體開發與 AI 原生架構設計。</p> <h2>關於我</h2> <p>
+Porter 顏先生是一位資深軟體架構師與技術顧問，熟悉 <strong>Claude Code</strong>、<strong>Antigravity</strong>、<strong>Roo Code</strong> 等 AI 原生開發代理工具，並長期深耕於<strong>系統架構設計</strong>、<strong>前後端軟體開發</strong>、<strong>資料庫系統設計</strong>與<strong>效能調優</strong>。他在智慧製造、工業自動化及企業數位轉型領域累積了超過五十個企業級成功案例。
+</p> <p>
+他深信優秀的系統不僅追求「跑得動」，更追求「活得久」——易於維護、易於擴展、易於理解，這也是他在每個專案中所貫徹的設計哲學。
+</p> <h2>創作哲學</h2> <p>
+在 AI 浪潮席捲技術世界的此刻，Porter 是那種手握鍵盤、口述想法、讓 AI 奮筆疾書的協同作家——
+</p> <p>
+他的工作流從不起頭於空白的編輯器，而是始於一句對話：「幫我設計一個能即時偵測設備異常的 Agent 架構。」幾輪對話後，系統骨架已然成形；他的職責，是用三十年的工程判斷力，為 AI 的每一個輸出打上「可以」或「再想想」的印章。
+</p> <p>這，就是他所定義的新時代工程師：<strong>不是寫所有程式碼的人，而是知道什麼程式碼值得被寫的人。</strong></p> <p>
+然而，在他對技術的熱情背後，藏著一份始終未曾褪去的人文關懷。他相信，真正偉大的系統從來不炫耀它有多複雜——它只是讓工廠工人的報表少看幾次、讓工程師的查詢從三十分鐘縮短到三秒、讓決策者在最需要的深夜，還能看見一盞清晰的數字明燈。
+</p> <blockquote> <strong>「工具越強大，越需要清晰的人文意志來駕馭它。技術是手段，人是目的——這是三十年來，我從未改變的設計信仰。」</strong> </blockquote> <h2>技術旅程 (Journey)</h2> <ul> <li> <strong>1995 | 工業自動化起步：</strong>
+投入製造業自動化領域，深耕 PLC 程式設計與底層通訊協定（RS-232、RS-485、Modbus），奠定硬軟體整合的紮實基礎。
+</li> <li> <strong>2002 | MES 系統深耕：</strong>
+主導多家電子大廠製造執行系統（MES）與工程資料收集（EDC）核心模組開發，整合生產排程、品質追溯與設備聯網。
+</li> <li> <strong>2010 | 企業數位轉型導入：</strong>
+跨入 ERP 系統整合、自動化物料搬送系統（AMHS）開發與雲端架構設計，協助傳統製造企業建立跨廠區 BI 決策分析平台。
+</li> <li> <strong>2016 | 現代全端技術轉型：</strong>
+擁抱 React、Vue.js、TypeScript 等現代前端生態，搭配 Node.js / .NET Core 後端與自動光學檢測（AOI）系統開發，打造高互動性數位產品。
+</li> <li> <strong>2021 | AI 技術規模化應用：</strong>
+導入 LLM 與 RAG 技術至企業知識管理，透過 n8n 與 Dify 建立多個 AI Agent 自動化工作流，協助客戶大幅降低人力重複作業成本。
+</li> <li> <strong>2024 | AI 原生架構新時代：</strong>
+以 AI-First 思維重新設計系統架構，整合向量資料庫、語意搜尋與多模態模型，持續探索人機協作的新邊界。
+</li> </ul> <h2>核心服務項目</h2> <ul> <li><strong>系統架構設計</strong>：提供高並發、高穩定性之分散式架構與微服務佈局（包括微服務 & 事件驅動架構、高可用 Kubernetes 叢集、API Gateway 等）。</li> <li><strong>軟體開發設計</strong>：客製化軟體開發、MES / ERP 企業核心系統、LINE LIFF 輕應用整合與工業通訊協定（OPC-UA / MQTT）整合。</li> <li><strong>AI 顧問服務</strong>：企業知識庫 RAG 架構導入、LLM Prompt Engineering、AI Agent 工作流設計、模型微調與評估。</li> <li><strong>網頁開發與設計</strong>：精通 Vue、React 等現代前端框架，結合穩定的 RESTful / GraphQL API 設計，提供兼具美學與效能的數位平台。</li> </ul> <h2>技術專長 (Tech Stack)</h2> <ul> <li><strong>程式語言</strong>：Python, TypeScript, C#, C/C++, Java</li> <li><strong>前端技術</strong>：React, Vue.js, Vite, Tailwind CSS, Framer Motion</li> <li><strong>後端技術</strong>：Node.js, .NET Core, FastAPI, GraphQL, REST API</li> <li><strong>AI / ML</strong>：Claude Code, Antigravity, Roo Code, LangChain, LangGraph, OpenAI API, RAG 架構, Ollama, Prompt Engineering</li> <li><strong>基礎設施</strong>：Docker, Kubernetes, Azure, AWS, CI/CD, PostgreSQL</li> <li><strong>工業通訊</strong>：OPC-UA, MQTT, Modbus, PROFINET, PLC 整合</li> </ul> <h2>精選作品與實績</h2> <ul> <li> <strong>智慧製造 MES 重建計畫 (2022)：</strong>
+主導某上市電子製造商舊有 MES 全面重構，從單體架構遷移至微服務架構，整合 30+ 台設備 OPC-UA 即時資料流，生產可視化即時率從 62% 提升至 98%。
+</li> <li> <strong>企業 AI 知識管理平台 (2023)：</strong>
+為中型製造集團建立內部知識庫問答系統，採用 RAG 架構整合 5,000+ 份技術文件，搭配 LLM 語意理解，使工程師查詢效率提升 70%。
+</li> <li> <strong>供應鏈可視化監控平台 (2023)：</strong>
+以 React + FastAPI 建構跨 8 廠區的供應鏈即時監控平台，整合 ERP、WMS 與 MES 資料，提供管理層即時庫存水位、交期預警與 LINE 異常告警推播。
+</li> <li> <strong>drawio-cli 圖表自動化工具 (2026)：</strong>
+設計並實作純 Node.js ESM 的 CLI 工具，以「代碼即圖表」理念將架構設計併入版本控制，內建 7 種精美範本與 36 項自動化測試保護，大幅降低架構文件維護成本。
+</li> </ul> <h3 style="margin-top: 2.5rem;">AI 世代協同創作哲學圖表</h3> <figure class="ss" style="margin: 1.5rem 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--bg2); box-shadow: 0 4px 12px rgba(0,0,0,0.15);"> <img src="/sse-guide/img/ai-era-philosophy.png" alt="AI 世代協同創作哲學圖表" style="width: 100%; display: block; height: auto;"> <figcaption style="padding: 0.75rem; text-align: center; font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--border); background: var(--bg3);">
+圖表：AI 時代的協同創作哲學（從傳統荊棘、謎境跨越到筋斗雲的高效合作）
+</figcaption> </figure> <blockquote style="font-size: 1.1rem; line-height: 1.8; border-left: 4px solid var(--accent); padding: 1rem 1.5rem; margin: 2rem 0; background: var(--bg2); border-radius: 0 8px 8px 0;">
+AI 世代，無論你此刻仍在荊棘叢中摸索爬行，抑或已如夢似幻地深陷 AI 謎境——<br> <strong>讓我帶你登上筋斗雲，如悟空一躍，十萬八千里。</strong> </blockquote> <h2>聯絡資訊</h2> <ul> <li><strong>📍 地址：</strong>新竹市東區</li> <li><strong>📞 諮詢專線：</strong>0936-891-502</li> <li><strong>📧 Email：</strong>porteryen@gmail.com</li> <li><strong>🕐 服務時間：</strong>請使用郵件與我連線, 或使用 Line (用電話搜尋)</li> </ul> <div class="call info"> <span class="ci">ℹ️</span> <div> <strong>本指南的誕生</strong> <p>這份 Node.js SSE 簡易指南，是 Porter 在開發即時串流與自動化腳本過程中，提煉出來的精華架構實踐。希望能幫助更多開發者了解並善用 Server-Sent Events 的強大能力，建構穩定可靠的單向推播服務。</p> </div> </div>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span> </a> <div class="ph" data-astro-cid-mw7aashj></div> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 

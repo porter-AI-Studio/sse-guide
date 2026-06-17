@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="zh-TW" data-astro-cid-mw7aashj> <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>簡易實戰(參考觀念)：9*9 乘法表 | </title><link rel="stylesheet" href="/sse-guide/_astro/DocsLayout.DcemHd1l.css"><style>.cb-wrap[data-astro-cid-jgrc2lfe]{margin-bottom:1.25rem}.cb-bar[data-astro-cid-jgrc2lfe]{display:flex;align-items:center;justify-content:space-between;background:#1a1a2e;border-radius:6px 6px 0 0;border:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.05);padding:.18rem .5rem .18rem .75rem;min-height:1.8rem}.cb-label[data-astro-cid-jgrc2lfe]{color:#a6adc8;font-family:Fira Code,Cascadia Code,Consolas,monospace;font-size:.73rem;letter-spacing:.04em}.cb-inner[data-astro-cid-jgrc2lfe] pre{border-radius:0 0 8px 8px!important;margin-bottom:0!important}.cb-copy[data-astro-cid-jgrc2lfe]{background:#ffffff14;color:#888;border:1px solid rgba(255,255,255,.12);border-radius:4px;padding:.15rem .55rem;font-size:.7rem;cursor:pointer;transition:all .15s;flex-shrink:0}.cb-copy[data-astro-cid-jgrc2lfe]:hover{background:#ffffff2e;color:#fff}.cb-copy[data-astro-cid-jgrc2lfe].copied{color:#4ec9b0;border-color:#4ec9b0}
+</style></head>Node.js SSE 簡易指南 <meta name="description" content="以 9*9 乘法表為例，實作結合子行程 (Child Process) 的 SSE 伺服器。"> <link rel="icon" href="/sse-guide/favicon.svg" type="image/svg+xml"> <script>
+    (function () {
+      const s = localStorage.getItem('cc-theme');
+      const d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (s === 'dark' || (!s && d)) document.documentElement.classList.add('dark');
+    })();
+  </script> <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    const isDark = document.documentElement.classList.contains('dark');
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose'
+    });
+    // Listen for theme toggles to re-render if necessary
+    document.getElementById('tt')?.addEventListener('click', () => {
+      setTimeout(() => location.reload(), 100);
+    });
+  </script>  </html> <body data-astro-cid-mw7aashj> <div id="pb" data-astro-cid-mw7aashj></div> <header data-astro-cid-mw7aashj> <div class="hi" data-astro-cid-mw7aashj> <div class="hl" data-astro-cid-mw7aashj> <button id="mbtn" class="ibtn" aria-label="選單" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" data-astro-cid-mw7aashj></path> </svg> </button> <a href="/sse-guide/" class="site-name" data-astro-cid-mw7aashj> <span class="logo" data-astro-cid-mw7aashj>SSE</span>&nbsp;&nbsp;Node.js SSE 簡易指南
+</a> </div> <div class="hr" data-astro-cid-mw7aashj> <button id="tt" class="ibtn" aria-label="切換主題" data-astro-cid-mw7aashj> <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" data-astro-cid-mw7aashj></path> </svg> <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z" data-astro-cid-mw7aashj></path> </svg> </button> </div> </div> </header> <div id="layout" data-astro-cid-mw7aashj> <nav id="sb" data-astro-cid-mw7aashj> <div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="1" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 1：指南</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="1" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/ch01-intro" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>1.</span> <span data-astro-cid-mw7aashj>核心概念</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch02-install" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>2.</span> <span data-astro-cid-mw7aashj>Windows 環境建置</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>3.</span> <span data-astro-cid-mw7aashj>RTCP 五軸加工系統</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch04-practice" class="active" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>4.</span> <span data-astro-cid-mw7aashj>簡易實戰(參考觀念)：9*9 乘法表</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/ch05-interpolation" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>5.</span> <span data-astro-cid-mw7aashj>RTCP 插補方法解析</span>  </a> </li> </ul> </div><div class="np" data-astro-cid-mw7aashj> <button class="pt open" data-pid="2" data-astro-cid-mw7aashj> <span data-astro-cid-mw7aashj>Part 2：附錄</span> <svg class="arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" data-astro-cid-mw7aashj> <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" data-astro-cid-mw7aashj></path> </svg> </button> <ul class="nl" data-pl="2" data-astro-cid-mw7aashj> <li data-astro-cid-mw7aashj> <a href="/sse-guide/glossary" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>6.</span> <span data-astro-cid-mw7aashj>名詞解釋</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/appendix-c-compiler" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>7.</span> <span data-astro-cid-mw7aashj>VS Code 建置 C 語言環境指南</span>  </a> </li><li data-astro-cid-mw7aashj> <a href="/sse-guide/about" data-astro-cid-mw7aashj> <span class="cn" data-astro-cid-mw7aashj>8.</span> <span data-astro-cid-mw7aashj>關於作者</span>  </a> </li> </ul> </div> </nav> <div id="ov" data-astro-cid-mw7aashj></div> <main data-astro-cid-mw7aashj> <div class="cb" data-astro-cid-mw7aashj>  <span class="clabel">指南</span> <h1>簡易實戰(參考觀念)：9*9 乘法表</h1> <p class="cdesc">不再只是傳送簡單的時間！這次我們將實作一個更真實的場景：使用 Node.js 執行外部程式（如 C 語言編譯的 9*9 乘法表程式），並透過 SSE 將其執行結果即時串流給前端。</p> <h2>1. 情境介紹</h2> <p>在實務上，我們常常需要透過 Node.js 執行一段耗時的外部任務（例如機器學習模型推理、或是背景的 C/C++ 程式），並希望讓前端即時看到「執行進度」。這個情境非常適合使用 SSE！</p> <p>我們假設您有一個 <code>multiplication.exe</code>（9*9 乘法表產生器），我們將用 Node.js 的 <code>child_process.spawn</code> 啟動它，並將它輸出的每一行結果推播給所有連接的網頁客戶端。</p> <h2>1. 系統架構與流程</h2> <p>為了讓您更清楚我們接下來要撰寫的程式碼在做什麼，請先參考以下架構圖：</p> <pre class="mermaid">  sequenceDiagram
+      participant C as 客戶端 (Browser)
+      participant S as 伺服器 (Node.js)
+      participant P as 外部程式 (C 執行檔)
+      
+      Note over C,S: 1. 建立推播通道
+      C->>S: GET /api/events (建立 SSE 連線)
+      S-->>C: 200 OK (Content-Type: text/event-stream)
+      
+      Note over C,S: 2. 任務控制指令群
+      C->>S: POST /api/start (手動步進開始)
+      C->>S: POST /api/run-all (自動全部執行)
+      C->>S: POST /api/continue (繼續下一步)
+      C->>S: POST /api/end (強制結束)
+      S->>P: 依據指令透過 spawn() 或 stdin 互動
+      S-->>C: data: [type=status, payload=RUNNING 或 WAITING_INPUT]
+
+      
+      Note over S,P: 3. 即時攔截輸出並推播
+      P-->>S: stdout 輸出: 1*1=1
+      S-->>C: data: [type=result, payload=1*1=1]
+      P-->>S: stdout 輸出: 1*2=2
+      S-->>C: data: [type=result, payload=1*2=2]
+      
+      Note over S,P: 4. 任務結束
+      P->>S: process exited
+      S-->>C: data: [type=status, payload=ENDED]
+  </pre> <h2>2. 初始化專案與安裝套件</h2> <p>在您的終端機中建立新資料夾並初始化專案：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="mkdir sse-multiplication
+cd sse-multiplication
+npm init -y
+npm install express" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#ABB2BF">mkdir sse</span><span style="color:#56B6C2">-</span><span style="color:#ABB2BF">multiplication</span></span>
+<span class="line"><span style="color:#ABB2BF">cd sse</span><span style="color:#56B6C2">-</span><span style="color:#ABB2BF">multiplication</span></span>
+<span class="line"><span style="color:#ABB2BF">npm init </span><span style="color:#56B6C2">-</span><span style="color:#ABB2BF">y</span></span>
+<span class="line"><span style="color:#ABB2BF">npm install express</span></span></code></pre> </div> </div>  <script type="module">document.querySelectorAll(".cb-copy").forEach(e=>{e.addEventListener("click",()=>{const t=e.dataset.code;t&&navigator.clipboard.writeText(t).then(()=>{e.textContent="已複製!",e.classList.add("copied"),setTimeout(()=>{e.textContent="複製",e.classList.remove("copied")},2e3)})})});</script> <figure class="ss"> <pre class="mermaid">flowchart TD
+    A[Express App\nport 3000] --> B[GET /events\nSSE Endpoint]
+    B --> C[spawn child_process\nnpm run table]
+    C --> D[攔截 stdout]
+    D --> E[逐行 data 推送]
+    E --> F[Client 接收]
+    B --> G[GET /stop\n終止子行程]
+    </pre> <figcaption>圖：伺服器架構方塊圖</figcaption> </figure> <h2>3. 撰寫伺服器端程式碼 (server.js)</h2> <p>建立 <code>server.js</code>，這裡我們整合了 SSE 端點與 <code>spawn</code>，當接收到客戶端請求時，就會建立 SSE 連線並將子行程的輸出轉換為 SSE 事件發送。</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="const express = require('express');
+const { spawn } = require('child_process');
+const path = require('path');
+
+const app = express();
+app.use(express.static('public'));
+
+let sseClients = [];
+
+// 發送 SSE 訊息的共用函數
+function broadcastSSE(type, payload) {
+    const data = JSON.stringify({ type, payload });
+    sseClients.forEach(client => {
+        client.write(`data: ${data}\n\n`);
+    });
+}
+
+// SSE Endpoint：管理連線
+app.get('/api/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    // 告知連線成功
+    res.write(`data: ${JSON.stringify({ type: 'connection', payload: 'connected' })}\n\n`);
+    
+    sseClients.push(res);
+    console.log(`新客戶端連線，目前總數: ${sseClients.length}`);
+
+    req.on('close', () => {
+        sseClients = sseClients.filter(client => client !== res);
+    });
+});
+
+// API Endpoint：觸發 9*9 乘法表程式
+app.post('/api/start', (req, res) => {
+    // 假設我們呼叫外部的 C 執行檔 (或是任何 CLI 工具)
+    const cProcess = spawn('cmd', ['/c', 'echo 1*1=1 &amp;&amp; timeout 1 >nul &amp;&amp; echo 1*2=2']); // 這裡以 cmd 模擬輸出
+    
+    broadcastSSE('status', 'RUNNING');
+
+    cProcess.stdout.on('data', (data) => {
+        const output = data.toString().trim();
+        if (output) {
+            // 將程式的標準輸出推播給前端
+            broadcastSSE('result', output);
+        }
+    });
+
+    cProcess.on('close', (code) => {
+        broadcastSSE('status', 'ENDED');
+    });
+
+    res.json({ success: true, message: 'Process started' });
+});
+
+app.listen(3000, () => {
+    console.log('Server is running at http://localhost:3000');
+});" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="javascript"><code><span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> express</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'express'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#ABB2BF"> { </span><span style="color:#E5C07B">spawn</span><span style="color:#ABB2BF"> } </span><span style="color:#56B6C2">=</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'child_process'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> path</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> require</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'path'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">const</span><span style="color:#E5C07B"> app</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> express</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">use</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">express</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">static</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'public'</span><span style="color:#ABB2BF">));</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C678DD">let</span><span style="color:#E06C75"> sseClients</span><span style="color:#56B6C2"> =</span><span style="color:#ABB2BF"> [];</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// 發送 SSE 訊息的共用函數</span></span>
+<span class="line"><span style="color:#C678DD">function</span><span style="color:#61AFEF"> broadcastSSE</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75;font-style:italic">type</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75;font-style:italic">payload</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#E5C07B"> data</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">stringify</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">type</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75">payload</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#E5C07B">    sseClients</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">forEach</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75;font-style:italic">client</span><span style="color:#C678DD"> =></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E5C07B">        client</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`data: </span><span style="color:#C678DD">${</span><span style="color:#E06C75">data</span><span style="color:#C678DD">}</span><span style="color:#56B6C2">\n\n</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"><span style="color:#ABB2BF">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// SSE Endpoint：管理連線</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">get</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/api/events'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">req</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75;font-style:italic">res</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Content-Type'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'text/event-stream'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Cache-Control'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'no-cache'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">setHeader</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Connection'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'keep-alive'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 告知連線成功</span></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">write</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`data: </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">stringify</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">type</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'connection'</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75">payload</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'connected'</span><span style="color:#ABB2BF"> })</span><span style="color:#C678DD">}</span><span style="color:#56B6C2">\n\n</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">    </span></span>
+<span class="line"><span style="color:#E5C07B">    sseClients</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">push</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">res</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">    console</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">log</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">`新客戶端連線，目前總數: </span><span style="color:#C678DD">${</span><span style="color:#E5C07B">sseClients</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">length</span><span style="color:#C678DD">}</span><span style="color:#98C379">`</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">    req</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'close'</span><span style="color:#ABB2BF">, () </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E06C75">        sseClients</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> sseClients</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">filter</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75;font-style:italic">client</span><span style="color:#C678DD"> =></span><span style="color:#E06C75"> client</span><span style="color:#56B6C2"> !==</span><span style="color:#E06C75"> res</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"><span style="color:#ABB2BF">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">// API Endpoint：觸發 9*9 乘法表程式</span></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">post</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/api/start'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">req</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75;font-style:italic">res</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">    // 假設我們呼叫外部的 C 執行檔 (或是任何 CLI 工具)</span></span>
+<span class="line"><span style="color:#C678DD">    const</span><span style="color:#E5C07B"> cProcess</span><span style="color:#56B6C2"> =</span><span style="color:#61AFEF"> spawn</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'cmd'</span><span style="color:#ABB2BF">, [</span><span style="color:#98C379">'/c'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'echo 1*1=1 &#x26;&#x26; timeout 1 >nul &#x26;&#x26; echo 1*2=2'</span><span style="color:#ABB2BF">]); </span><span style="color:#7F848E;font-style:italic">// 這裡以 cmd 模擬輸出</span></span>
+<span class="line"><span style="color:#ABB2BF">    </span></span>
+<span class="line"><span style="color:#61AFEF">    broadcastSSE</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'status'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'RUNNING'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">    cProcess</span><span style="color:#ABB2BF">.</span><span style="color:#E5C07B">stdout</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'data'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">data</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> output</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> data</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">toString</span><span style="color:#ABB2BF">().</span><span style="color:#61AFEF">trim</span><span style="color:#ABB2BF">();</span></span>
+<span class="line"><span style="color:#C678DD">        if</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75">output</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">            // 將程式的標準輸出推播給前端</span></span>
+<span class="line"><span style="color:#61AFEF">            broadcastSSE</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'result'</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75">output</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">        }</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">    cProcess</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">on</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'close'</span><span style="color:#ABB2BF">, (</span><span style="color:#E06C75;font-style:italic">code</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#61AFEF">        broadcastSSE</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'status'</span><span style="color:#ABB2BF">, </span><span style="color:#98C379">'ENDED'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">    });</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">    res</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">json</span><span style="color:#ABB2BF">({ </span><span style="color:#E06C75">success</span><span style="color:#ABB2BF">: </span><span style="color:#D19A66">true</span><span style="color:#ABB2BF">, </span><span style="color:#E06C75">message</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'Process started'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#ABB2BF">});</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">app</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">listen</span><span style="color:#ABB2BF">(</span><span style="color:#D19A66">3000</span><span style="color:#ABB2BF">, () </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E5C07B">    console</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">log</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'Server is running at http://localhost:3000'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">});</span></span></code></pre> </div> </div>   <figure class="ss"> <pre class="mermaid">flowchart LR
+    A([頁面載入]) --> B[new EventSource '/events']
+    B --> C{收到事件}
+    C --> D{event.type?}
+    D -- data --> E[附加到 output div]
+    D -- done --> F[顯示完成訊息]
+    D -- error --> G[顯示錯誤]
+    E --> C
+    F --> H([結束])
+    G --> H</pre> <figcaption>圖：客戶端事件處理流程</figcaption> </figure> <h2>4. 撰寫客戶端程式碼 (public/index.html)</h2> <p>建立 <code>public/index.html</code>，使用 <code>EventSource</code> 訂閱 <code>/api/events</code> 的推播，並透過按鈕呼叫 API 啟動背景任務：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="<!DOCTYPE html>
+<html lang=&quot;zh-TW&quot;>
+<head>
+    <meta charset=&quot;UTF-8&quot;>
+    <title>9*9 乘法表 SSE 串流</title>
+</head>
+<body>
+    <h1>9*9 乘法表 即時運算</h1>
+    <button id=&quot;btn-start&quot;>開始運算</button>
+    <p>系統狀態：<strong id=&quot;status&quot;>IDLE</strong></p>
+    
+    <h2>運算結果：</h2>
+    <ul id=&quot;results&quot;></ul>
+
+    <script>
+        const statusEl = document.getElementById('status');
+        const resultsEl = document.getElementById('results');
+
+        // 建立 SSE 連線
+        const eventSource = new EventSource('/api/events');
+
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'status') {
+                statusEl.textContent = data.payload;
+            } else if (data.type === 'result') {
+                const li = document.createElement('li');
+                li.textContent = data.payload;
+                resultsEl.appendChild(li);
+            } else if (data.type === 'connection') {
+                console.log('SSE 連線成功');
+            }
+        };
+
+        // 按鈕觸發後端程式
+        document.getElementById('btn-start').addEventListener('click', async () => {
+            resultsEl.innerHTML = ''; // 清空先前的結果
+            await fetch('/api/start', { method: 'POST' });
+        });
+    </script>
+</body>
+</html>" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="html"><code><span class="line"><span style="color:#ABB2BF">&#x3C;!</span><span style="color:#E06C75">DOCTYPE</span><span style="color:#D19A66"> html</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;</span><span style="color:#E06C75">html</span><span style="color:#D19A66"> lang</span><span style="color:#ABB2BF">=</span><span style="color:#98C379">"zh-TW"</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;</span><span style="color:#E06C75">head</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">meta</span><span style="color:#D19A66"> charset</span><span style="color:#ABB2BF">=</span><span style="color:#98C379">"UTF-8"</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">title</span><span style="color:#ABB2BF">>9*9 乘法表 SSE 串流&#x3C;/</span><span style="color:#E06C75">title</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;/</span><span style="color:#E06C75">head</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;</span><span style="color:#E06C75">body</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">h1</span><span style="color:#ABB2BF">>9*9 乘法表 即時運算&#x3C;/</span><span style="color:#E06C75">h1</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">button</span><span style="color:#D19A66"> id</span><span style="color:#ABB2BF">=</span><span style="color:#98C379">"btn-start"</span><span style="color:#ABB2BF">>開始運算&#x3C;/</span><span style="color:#E06C75">button</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">p</span><span style="color:#ABB2BF">>系統狀態：&#x3C;</span><span style="color:#E06C75">strong</span><span style="color:#D19A66"> id</span><span style="color:#ABB2BF">=</span><span style="color:#98C379">"status"</span><span style="color:#ABB2BF">>IDLE&#x3C;/</span><span style="color:#E06C75">strong</span><span style="color:#ABB2BF">>&#x3C;/</span><span style="color:#E06C75">p</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    </span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">h2</span><span style="color:#ABB2BF">>運算結果：&#x3C;/</span><span style="color:#E06C75">h2</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">ul</span><span style="color:#D19A66"> id</span><span style="color:#ABB2BF">=</span><span style="color:#98C379">"results"</span><span style="color:#ABB2BF">>&#x3C;/</span><span style="color:#E06C75">ul</span><span style="color:#ABB2BF">></span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;</span><span style="color:#E06C75">script</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> statusEl</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getElementById</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'status'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> resultsEl</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getElementById</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'results'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">        // 建立 SSE 連線</span></span>
+<span class="line"><span style="color:#C678DD">        const</span><span style="color:#E5C07B"> eventSource</span><span style="color:#56B6C2"> =</span><span style="color:#C678DD"> new</span><span style="color:#61AFEF"> EventSource</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/api/events'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E5C07B">        eventSource</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">onmessage</span><span style="color:#56B6C2"> =</span><span style="color:#ABB2BF"> (</span><span style="color:#E06C75;font-style:italic">event</span><span style="color:#ABB2BF">) </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#C678DD">            const</span><span style="color:#E5C07B"> data</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> JSON</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">parse</span><span style="color:#ABB2BF">(</span><span style="color:#E5C07B">event</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">data</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">            </span></span>
+<span class="line"><span style="color:#C678DD">            if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">data</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'status'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#E5C07B">                statusEl</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">textContent</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> data</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">payload</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#ABB2BF">            } </span><span style="color:#C678DD">else</span><span style="color:#C678DD"> if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">data</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'result'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#C678DD">                const</span><span style="color:#E5C07B"> li</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">createElement</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'li'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#E5C07B">                li</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">textContent</span><span style="color:#56B6C2"> =</span><span style="color:#E5C07B"> data</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">payload</span><span style="color:#ABB2BF">;</span></span>
+<span class="line"><span style="color:#E5C07B">                resultsEl</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">appendChild</span><span style="color:#ABB2BF">(</span><span style="color:#E06C75">li</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">            } </span><span style="color:#C678DD">else</span><span style="color:#C678DD"> if</span><span style="color:#ABB2BF"> (</span><span style="color:#E5C07B">data</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">type</span><span style="color:#56B6C2"> ===</span><span style="color:#98C379"> 'connection'</span><span style="color:#ABB2BF">) {</span></span>
+<span class="line"><span style="color:#E5C07B">                console</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">log</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'SSE 連線成功'</span><span style="color:#ABB2BF">);</span></span>
+<span class="line"><span style="color:#ABB2BF">            }</span></span>
+<span class="line"><span style="color:#ABB2BF">        };</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#7F848E;font-style:italic">        // 按鈕觸發後端程式</span></span>
+<span class="line"><span style="color:#E5C07B">        document</span><span style="color:#ABB2BF">.</span><span style="color:#61AFEF">getElementById</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'btn-start'</span><span style="color:#ABB2BF">).</span><span style="color:#61AFEF">addEventListener</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'click'</span><span style="color:#ABB2BF">, </span><span style="color:#C678DD">async</span><span style="color:#ABB2BF"> () </span><span style="color:#C678DD">=></span><span style="color:#ABB2BF"> {</span></span>
+<span class="line"><span style="color:#E5C07B">            resultsEl</span><span style="color:#ABB2BF">.</span><span style="color:#E06C75">innerHTML</span><span style="color:#56B6C2"> =</span><span style="color:#98C379"> ''</span><span style="color:#ABB2BF">; </span><span style="color:#7F848E;font-style:italic">// 清空先前的結果</span></span>
+<span class="line"><span style="color:#C678DD">            await</span><span style="color:#61AFEF"> fetch</span><span style="color:#ABB2BF">(</span><span style="color:#98C379">'/api/start'</span><span style="color:#ABB2BF">, { </span><span style="color:#E06C75">method</span><span style="color:#ABB2BF">: </span><span style="color:#98C379">'POST'</span><span style="color:#ABB2BF"> });</span></span>
+<span class="line"><span style="color:#ABB2BF">        });</span></span>
+<span class="line"><span style="color:#ABB2BF">    &#x3C;/</span><span style="color:#E06C75">script</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;/</span><span style="color:#E06C75">body</span><span style="color:#ABB2BF">></span></span>
+<span class="line"><span style="color:#ABB2BF">&#x3C;/</span><span style="color:#E06C75">html</span><span style="color:#ABB2BF">></span></span></code></pre> </div> </div>   <h2>5. 執行與觀察</h2> <p>在終端機中啟動伺服器：</p> <div class="cb-wrap" data-astro-cid-jgrc2lfe> <div class="cb-bar" data-astro-cid-jgrc2lfe> <span class="cb-label" data-astro-cid-jgrc2lfe></span> <button class="cb-copy" data-code="node server.js" data-astro-cid-jgrc2lfe>複製</button> </div> <div class="cb-inner" data-astro-cid-jgrc2lfe> <pre class="astro-code one-dark-pro" style="background-color:#282c34;color:#abb2bf; overflow-x: auto;" tabindex="0" data-astro-cid-jgrc2lfe data-language="powershell"><code><span class="line"><span style="color:#ABB2BF">node server.js</span></span></code></pre> </div> </div>   <p>開啟瀏覽器進入 <code>http://localhost:3000</code>，點擊「開始運算」按鈕。您會發現前端並沒有使用 <code>setInterval</code> 等待，而是依賴後端 <code>spawn</code> 程序的輸出進度，透過 SSE 將結果一行一行非同步地繪製到畫面上！這正是 SSE 結合背景工作最迷人的地方。</p> <div class="call info"> <div class="ci">ℹ️</div> <p><strong>實際專案參考：</strong> 您可以將範例中的 <code>spawn('cmd', ...)</code> 替換為真實的 <code>multiplication.exe</code> 路徑，並且可以結合資料庫 (如 Knex.js + SQLite) 將每一次的乘法紀錄在背景寫入資料庫中。</p> </div>  </div> <nav class="cnav" data-astro-cid-mw7aashj> <a href="/sse-guide/ch03-rtcp" class="prev" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>← 上一章</span> <span class="nt" data-astro-cid-mw7aashj>RTCP 五軸插補系統：三層 SSE 架構</span> </a> <a href="/sse-guide/ch05-interpolation" class="next" data-astro-cid-mw7aashj> <span class="nd" data-astro-cid-mw7aashj>下一章 →</span> <span class="nt" data-astro-cid-mw7aashj>RTCP 插補方法解析</span> </a> </nav> </main> </div> <div id="fab" data-astro-cid-mw7aashj> <button id="totop" aria-label="回到最上方" title="回到最上方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" data-astro-cid-mw7aashj></path></svg> </button> <button id="tobottom" aria-label="捲到最下方" title="捲到最下方" data-astro-cid-mw7aashj> <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" data-astro-cid-mw7aashj><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" data-astro-cid-mw7aashj></path></svg> </button> </div> <script>
+    // Theme
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function syncIcons() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    syncIcons();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      syncIcons();
+    });
+
+    // Progress
+    const pb = document.getElementById('pb');
+    window.addEventListener('scroll', () => {
+      const t = document.documentElement.scrollHeight - window.innerHeight;
+      pb.style.width = t > 0 ? `${(window.scrollY / t) * 100}%` : '0%';
+    }, { passive: true });
+
+    // Sidebar part toggles
+    document.querySelectorAll('.pt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.pid;
+        const list = document.querySelector(`[data-pl="${id}"]`);
+        btn.classList.toggle('open');
+        list?.classList.toggle('closed');
+      });
+    });
+
+    // Mobile menu
+    const sb = document.getElementById('sb');
+    const ov = document.getElementById('ov');
+    const mb = document.getElementById('mbtn');
+    const open = () => { sb.classList.add('open'); ov.classList.add('open'); document.body.style.overflow='hidden'; };
+    const close = () => { sb.classList.remove('open'); ov.classList.remove('open'); document.body.style.overflow=''; };
+    mb?.addEventListener('click', open);
+    ov?.addEventListener('click', close);
+
+    // FAB
+    document.getElementById('totop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.getElementById('tobottom')?.addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+  </script> </body> 
